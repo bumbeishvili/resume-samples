@@ -1,0 +1,887 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Concept 05 / 20 — Spotify Wrapped</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #0a0a0a;
+            color: #888;
+            font-family: 'IBM Plex Mono', monospace;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ═══════════════════════════════════════
+           OUTER PAGE
+           ═══════════════════════════════════════ */
+        .concept-header {
+            max-width: 1340px;
+            margin: 0 auto;
+            padding: 52px 48px 28px;
+            font-family: 'Outfit', sans-serif;
+        }
+        .concept-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .concept-num {
+            font-size: 11px;
+            font-weight: 400;
+            letter-spacing: 0.08em;
+            color: #505050;
+            text-transform: uppercase;
+            font-family: 'Outfit', sans-serif;
+        }
+        .concept-tag {
+            font-size: 9px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #1ed760;
+            border: 1px solid rgba(30,215,96,0.22);
+            background: rgba(30,215,96,0.06);
+            padding: 4px 11px 3px;
+            border-radius: 3px;
+            font-family: 'Outfit', sans-serif;
+        }
+        .concept-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 38px;
+            font-weight: 800;
+            color: #f0f0f0;
+            letter-spacing: -0.025em;
+            margin-bottom: 12px;
+        }
+        .concept-desc {
+            font-family: 'Outfit', sans-serif;
+            font-size: 13px;
+            font-weight: 300;
+            line-height: 1.75;
+            color: #5a5a5a;
+            max-width: 640px;
+        }
+
+        /* ═══════════════════════════════════════
+           DEVICE CONTAINER
+           ═══════════════════════════════════════ */
+        .devices-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .devices {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 52px;
+            padding: 20px 48px 96px;
+            min-width: 1340px;
+        }
+        .device-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 18px;
+        }
+        .device-label {
+            font-family: 'Outfit', sans-serif;
+            font-size: 10px;
+            font-weight: 400;
+            letter-spacing: 0.06em;
+            color: #2e2e2e;
+        }
+
+        /* ═══════════════════════════════════════
+           DESKTOP FRAME
+           ═══════════════════════════════════════ */
+        .desktop-frame {
+            width: 840px;
+            height: 594px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow:
+                0 1px 4px rgba(0,0,0,0.25),
+                0 8px 32px rgba(0,0,0,0.45),
+                inset 0 0 0 1px rgba(255,255,255,0.03);
+        }
+
+        /* ═══════════════════════════════════════
+           MOBILE FRAME
+           ═══════════════════════════════════════ */
+        .mobile-frame {
+            width: 320px;
+            height: 620px;
+            border-radius: 28px;
+            border: 5px solid #1a1a1a;
+            overflow: hidden;
+            position: relative;
+            box-shadow:
+                0 1px 4px rgba(0,0,0,0.25),
+                0 8px 32px rgba(0,0,0,0.45);
+        }
+        .mobile-frame::before {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 76px;
+            height: 22px;
+            background: #000;
+            border-radius: 12px;
+            z-index: 10;
+        }
+
+        /* ═══════════════════════════════════════
+           SHARED CV VARS (Spotify-Wrapped theme)
+           ═══════════════════════════════════════ */
+        .wrapped-cv {
+            font-family: 'Outfit', sans-serif;
+            --green: #1ed760;
+            --green-dim: rgba(30,215,96,0.15);
+            --pink: #e8115b;
+            --pink-dim: rgba(232,17,91,0.15);
+            --peach: #f573a0;
+            --lavender: #b4a0ff;
+            --yellow: #ffd600;
+            --txt: #ffffff;
+            --txt-dim: rgba(255,255,255,0.55);
+            --txt-ghost: rgba(255,255,255,0.25);
+        }
+
+        /* ═══════════════════════════════════════
+           DESKTOP RESUME
+           ═══════════════════════════════════════ */
+        .d-cv {
+            width: 840px;
+            height: 594px;
+            display: flex;
+            gap: 0;
+            position: relative;
+            overflow: hidden;
+            background: #0f0f0f;
+        }
+
+        /* ── Three "slides" ── */
+        .d-slide {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            padding: 28px 24px;
+        }
+
+        /* Slide 1 - Green gradient */
+        .d-slide-1 {
+            background: linear-gradient(165deg, #1ed760 0%, #0d6832 48%, #0a0a0a 100%);
+        }
+        /* Slide 2 - Dark center */
+        .d-slide-2 {
+            background: linear-gradient(175deg, #0f0f0f 0%, #1a1020 40%, #0f0f0f 100%);
+            border-left: 1px solid rgba(255,255,255,0.04);
+            border-right: 1px solid rgba(255,255,255,0.04);
+        }
+        /* Slide 3 - Pink gradient */
+        .d-slide-3 {
+            background: linear-gradient(185deg, #e8115b 0%, #520a24 50%, #0a0a0a 100%);
+        }
+
+        /* Glass card inside slides */
+        .d-glass {
+            background: rgba(255,255,255,0.06);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        /* Slide 1 — Identity + Big Stat */
+        .d-s1-year {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: rgba(0,0,0,0.35);
+            margin-bottom: auto;
+        }
+        .d-s1-name {
+            font-size: 32px;
+            font-weight: 900;
+            color: #fff;
+            line-height: 1.05;
+            letter-spacing: -0.03em;
+            margin-bottom: 4px;
+        }
+        .d-s1-title {
+            font-size: 11px;
+            font-weight: 400;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 20px;
+        }
+        .d-s1-stat-label {
+            font-size: 9px;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.4);
+            margin-bottom: 4px;
+        }
+        .d-s1-stat-num {
+            font-size: 56px;
+            font-weight: 900;
+            color: #fff;
+            line-height: 1;
+            letter-spacing: -0.04em;
+        }
+        .d-s1-stat-unit {
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.5);
+            display: block;
+            margin-top: 2px;
+        }
+        .d-s1-location {
+            font-size: 9px;
+            font-weight: 400;
+            color: rgba(255,255,255,0.35);
+            margin-top: auto;
+            padding-top: 16px;
+        }
+
+        /* Slide 2 — Skills ranking + Career stats */
+        .d-s2-header {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--lavender);
+            margin-bottom: 16px;
+        }
+        .d-rank-list { list-style: none; margin-bottom: 20px; }
+        .d-rank-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 7px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .d-rank-item:last-child { border-bottom: none; }
+        .d-rank-num {
+            font-size: 20px;
+            font-weight: 800;
+            color: rgba(255,255,255,0.12);
+            width: 28px;
+            text-align: right;
+            flex-shrink: 0;
+        }
+        .d-rank-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: #fff;
+            flex: 1;
+        }
+        .d-rank-bar-track {
+            width: 60px;
+            height: 4px;
+            background: rgba(255,255,255,0.06);
+            border-radius: 2px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .d-rank-bar-fill {
+            height: 100%;
+            border-radius: 2px;
+        }
+        .bar-green { background: var(--green); }
+        .bar-pink { background: var(--pink); }
+        .bar-lavender { background: var(--lavender); }
+        .bar-yellow { background: var(--yellow); }
+        .bar-peach { background: var(--peach); }
+
+        .d-stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: auto;
+        }
+        .d-stat-card {
+            background: rgba(255,255,255,0.04);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+        }
+        .d-stat-val {
+            font-size: 22px;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.1;
+        }
+        .d-stat-val .pct { font-size: 13px; font-weight: 600; }
+        .d-stat-lbl {
+            font-size: 8px;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.35);
+            margin-top: 4px;
+        }
+
+        /* Slide 3 — Experience timeline + wrap-up */
+        .d-s3-header {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--peach);
+            margin-bottom: 14px;
+        }
+        .d-exp-item {
+            margin-bottom: 14px;
+            padding-left: 14px;
+            border-left: 2px solid rgba(255,255,255,0.1);
+            position: relative;
+        }
+        .d-exp-item::before {
+            content: '';
+            position: absolute;
+            left: -5px;
+            top: 5px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--pink);
+            box-shadow: 0 0 8px rgba(232,17,91,0.4);
+        }
+        .d-exp-item:first-child::before {
+            background: var(--peach);
+            box-shadow: 0 0 10px rgba(245,115,160,0.5);
+            width: 10px; height: 10px;
+            left: -6px; top: 4px;
+        }
+        .d-exp-company {
+            font-size: 13px;
+            font-weight: 700;
+            color: #fff;
+        }
+        .d-exp-role {
+            font-size: 9px;
+            font-weight: 400;
+            color: rgba(255,255,255,0.55);
+            margin-top: 1px;
+        }
+        .d-exp-years {
+            font-size: 8px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.25);
+            margin-top: 2px;
+        }
+        .d-s3-wrap {
+            margin-top: auto;
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            padding: 14px 16px;
+        }
+        .d-s3-wrap-label {
+            font-size: 8px;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--peach);
+            margin-bottom: 6px;
+        }
+        .d-s3-wrap-text {
+            font-size: 10px;
+            font-weight: 400;
+            color: rgba(255,255,255,0.55);
+            line-height: 1.6;
+        }
+
+        /* Noise grain overlay per slide */
+        .d-slide::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            opacity: 0.03;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+        .d-slide > * { position: relative; z-index: 1; }
+
+        /* ═══════════════════════════════════════
+           MOBILE RESUME
+           ═══════════════════════════════════════ */
+        .m-cv {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(175deg, #1ed760 0%, #07331a 32%, #0f0f0f 58%, #3a0a20 85%, #e8115b 130%);
+        }
+        .m-cv::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            opacity: 0.03;
+            pointer-events: none;
+            z-index: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+        .m-cv > * { position: relative; z-index: 1; }
+
+        .m-top {
+            padding: 44px 20px 0;
+            flex-shrink: 0;
+        }
+        .m-year {
+            font-size: 9px;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.3);
+            margin-bottom: 10px;
+        }
+        .m-name {
+            font-size: 22px;
+            font-weight: 900;
+            color: #fff;
+            line-height: 1.08;
+            letter-spacing: -0.02em;
+        }
+        .m-subtitle {
+            font-size: 9px;
+            font-weight: 400;
+            color: rgba(255,255,255,0.5);
+            margin-top: 4px;
+        }
+        .m-loc {
+            font-size: 8px;
+            font-weight: 400;
+            color: rgba(255,255,255,0.25);
+            margin-top: 3px;
+        }
+
+        /* Big stat hero */
+        .m-hero-stat {
+            text-align: center;
+            padding: 18px 20px 14px;
+            flex-shrink: 0;
+        }
+        .m-hero-label {
+            font-size: 8px;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.3);
+            margin-bottom: 2px;
+        }
+        .m-hero-num {
+            font-size: 52px;
+            font-weight: 900;
+            color: #fff;
+            line-height: 1;
+            letter-spacing: -0.04em;
+        }
+        .m-hero-unit {
+            font-size: 11px;
+            font-weight: 500;
+            color: rgba(255,255,255,0.4);
+        }
+
+        /* Scrollable card area */
+        .m-cards {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 14px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            scrollbar-width: none;
+        }
+        .m-cards::-webkit-scrollbar { display: none; }
+
+        .m-glass {
+            background: rgba(255,255,255,0.06);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 14px;
+            padding: 14px 16px;
+            flex-shrink: 0;
+        }
+
+        .m-card-label {
+            font-size: 8px;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--lavender);
+            margin-bottom: 10px;
+        }
+
+        /* Mini rank list */
+        .m-rank-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 0;
+        }
+        .m-rank-num {
+            font-size: 14px;
+            font-weight: 800;
+            color: rgba(255,255,255,0.1);
+            width: 20px;
+            text-align: right;
+            flex-shrink: 0;
+        }
+        .m-rank-name {
+            font-size: 10px;
+            font-weight: 600;
+            color: #fff;
+            flex: 1;
+        }
+        .m-rank-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        /* Mini stat grid */
+        .m-stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .m-stat-box {
+            background: rgba(255,255,255,0.04);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+        }
+        .m-stat-val {
+            font-size: 18px;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.1;
+        }
+        .m-stat-val .pct { font-size: 10px; font-weight: 600; }
+        .m-stat-lbl {
+            font-size: 7px;
+            font-weight: 500;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.3);
+            margin-top: 3px;
+        }
+
+        /* Mini experience list */
+        .m-exp-item {
+            padding: 4px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        .m-exp-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            margin-top: 4px;
+            flex-shrink: 0;
+        }
+        .m-exp-company {
+            font-size: 10px;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.2;
+        }
+        .m-exp-role {
+            font-size: 8px;
+            font-weight: 400;
+            color: rgba(255,255,255,0.4);
+            margin-top: 1px;
+        }
+
+        /* ═══════════════════════════════════════
+           DOT COLORS
+           ═══════════════════════════════════════ */
+        .dot-green { background: var(--green); box-shadow: 0 0 6px rgba(30,215,96,0.4); }
+        .dot-pink { background: var(--pink); box-shadow: 0 0 6px rgba(232,17,91,0.4); }
+        .dot-lavender { background: var(--lavender); box-shadow: 0 0 6px rgba(180,160,255,0.4); }
+        .dot-yellow { background: var(--yellow); box-shadow: 0 0 6px rgba(255,214,0,0.4); }
+        .dot-peach { background: var(--peach); box-shadow: 0 0 6px rgba(245,115,160,0.4); }
+
+        /* ═══════════════════════════════════════
+           RESPONSIVE
+           ═══════════════════════════════════════ */
+        @media (max-width: 1380px) {
+            .devices { padding-left: 24px; padding-right: 24px; }
+            .concept-header { padding-left: 24px; padding-right: 24px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ═══════ CONCEPT HEADER ═══════ -->
+    <header class="concept-header">
+        <div class="concept-meta">
+            <span class="concept-num">Concept 05 / 20</span>
+            <span class="concept-tag">Medium</span>
+        </div>
+        <h1 class="concept-title">Spotify Wrapped</h1>
+        <p class="concept-desc">Bold gradient panels inspired by Spotify's year-in-review. Three glass-morphism slides display career stats as hero numbers, skills as ranked tracks, and experience as a vibrant listening history. Giant typography meets frosted glass on a green-to-pink spectrum.</p>
+    </header>
+
+    <!-- ═══════ DEVICE MOCKUPS ═══════ -->
+    <div class="devices-scroll">
+        <div class="devices">
+
+            <!-- ─────── DESKTOP ─────── -->
+            <div class="device-col">
+                <div class="desktop-frame">
+                    <div class="d-cv wrapped-cv">
+
+                        <!-- SLIDE 1 — Identity + Hero Stat -->
+                        <div class="d-slide d-slide-1">
+                            <div class="d-s1-year">Career Wrapped · 2025</div>
+
+                            <div style="margin-top:auto;">
+                                <div class="d-s1-name">PRIYA<br>SHARMA</div>
+                                <div class="d-s1-title">VP Marketing · Mumbai / London</div>
+                            </div>
+
+                            <div style="margin-top:24px;">
+                                <div class="d-s1-stat-label">Total Revenue Influenced</div>
+                                <div class="d-s1-stat-num">$340<span style="font-size:28px;font-weight:700;">M</span></div>
+                                <span class="d-s1-stat-unit">across 14 years</span>
+                            </div>
+
+                            <div class="d-s1-location">Mumbai, IN → London, UK</div>
+                        </div>
+
+                        <!-- SLIDE 2 — Skills Ranking + Quick Stats -->
+                        <div class="d-slide d-slide-2">
+                            <div class="d-s2-header">Your Top Skills</div>
+
+                            <ul class="d-rank-list">
+                                <li class="d-rank-item">
+                                    <span class="d-rank-num">01</span>
+                                    <span class="d-rank-name">Growth Strategy</span>
+                                    <div class="d-rank-bar-track"><div class="d-rank-bar-fill bar-green" style="width:96%"></div></div>
+                                </li>
+                                <li class="d-rank-item">
+                                    <span class="d-rank-num">02</span>
+                                    <span class="d-rank-name">Brand Positioning</span>
+                                    <div class="d-rank-bar-track"><div class="d-rank-bar-fill bar-lavender" style="width:91%"></div></div>
+                                </li>
+                                <li class="d-rank-item">
+                                    <span class="d-rank-num">03</span>
+                                    <span class="d-rank-name">Data Analytics</span>
+                                    <div class="d-rank-bar-track"><div class="d-rank-bar-fill bar-pink" style="width:85%"></div></div>
+                                </li>
+                                <li class="d-rank-item">
+                                    <span class="d-rank-num">04</span>
+                                    <span class="d-rank-name">Team Building</span>
+                                    <div class="d-rank-bar-track"><div class="d-rank-bar-fill bar-yellow" style="width:80%"></div></div>
+                                </li>
+                                <li class="d-rank-item">
+                                    <span class="d-rank-num">05</span>
+                                    <span class="d-rank-name">Storytelling</span>
+                                    <div class="d-rank-bar-track"><div class="d-rank-bar-fill bar-peach" style="width:76%"></div></div>
+                                </li>
+                            </ul>
+
+                            <div class="d-stats-row">
+                                <div class="d-stat-card">
+                                    <div class="d-stat-val">89<span class="pct">%</span></div>
+                                    <div class="d-stat-lbl">Team Retention</div>
+                                </div>
+                                <div class="d-stat-card">
+                                    <div class="d-stat-val">14</div>
+                                    <div class="d-stat-lbl">Years Active</div>
+                                </div>
+                                <div class="d-stat-card">
+                                    <div class="d-stat-val">6</div>
+                                    <div class="d-stat-lbl">Markets Led</div>
+                                </div>
+                                <div class="d-stat-card">
+                                    <div class="d-stat-val">42</div>
+                                    <div class="d-stat-lbl">Campaigns</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SLIDE 3 — Experience + Wrap-up -->
+                        <div class="d-slide d-slide-3">
+                            <div class="d-s3-header">Your Journey</div>
+
+                            <div class="d-exp-item">
+                                <div class="d-exp-company">Unilever</div>
+                                <div class="d-exp-role">VP Marketing, APAC</div>
+                                <div class="d-exp-years">2021 – Present · 4 yrs</div>
+                            </div>
+                            <div class="d-exp-item">
+                                <div class="d-exp-company">Diageo</div>
+                                <div class="d-exp-role">Senior Director, Brand</div>
+                                <div class="d-exp-years">2017 – 2021 · 4 yrs</div>
+                            </div>
+                            <div class="d-exp-item">
+                                <div class="d-exp-company">Ogilvy Mumbai</div>
+                                <div class="d-exp-role">Strategy Lead</div>
+                                <div class="d-exp-years">2014 – 2017 · 3 yrs</div>
+                            </div>
+                            <div class="d-exp-item">
+                                <div class="d-exp-company">WPP London</div>
+                                <div class="d-exp-role">Account Manager</div>
+                                <div class="d-exp-years">2011 – 2014 · 3 yrs</div>
+                            </div>
+
+                            <div class="d-s3-wrap">
+                                <div class="d-s3-wrap-label">Education</div>
+                                <div class="d-s3-wrap-text">
+                                    MBA Marketing — IIM Ahmedabad<br>
+                                    BA Economics — St. Xavier's, Mumbai
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <span class="device-label">Desktop — 840 × 594</span>
+            </div>
+
+            <!-- ─────── MOBILE ─────── -->
+            <div class="device-col">
+                <div class="mobile-frame">
+                    <div class="m-cv wrapped-cv">
+
+                        <!-- Top identity -->
+                        <div class="m-top">
+                            <div class="m-year">Career Wrapped · 2025</div>
+                            <div class="m-name">PRIYA SHARMA</div>
+                            <div class="m-subtitle">VP Marketing · Mumbai / London</div>
+                            <div class="m-loc">14 years · 6 markets · 42 campaigns</div>
+                        </div>
+
+                        <!-- Hero stat -->
+                        <div class="m-hero-stat">
+                            <div class="m-hero-label">Revenue Influenced</div>
+                            <div class="m-hero-num">$340M</div>
+                            <div class="m-hero-unit">across entire career</div>
+                        </div>
+
+                        <!-- Scrollable cards -->
+                        <div class="m-cards">
+
+                            <!-- Top skills -->
+                            <div class="m-glass">
+                                <div class="m-card-label">Your Top Skills</div>
+                                <div class="m-rank-item">
+                                    <span class="m-rank-num">01</span>
+                                    <span class="m-rank-name">Growth Strategy</span>
+                                    <div class="m-rank-dot dot-green"></div>
+                                </div>
+                                <div class="m-rank-item">
+                                    <span class="m-rank-num">02</span>
+                                    <span class="m-rank-name">Brand Positioning</span>
+                                    <div class="m-rank-dot dot-lavender"></div>
+                                </div>
+                                <div class="m-rank-item">
+                                    <span class="m-rank-num">03</span>
+                                    <span class="m-rank-name">Data Analytics</span>
+                                    <div class="m-rank-dot dot-pink"></div>
+                                </div>
+                                <div class="m-rank-item">
+                                    <span class="m-rank-num">04</span>
+                                    <span class="m-rank-name">Team Building</span>
+                                    <div class="m-rank-dot dot-yellow"></div>
+                                </div>
+                                <div class="m-rank-item">
+                                    <span class="m-rank-num">05</span>
+                                    <span class="m-rank-name">Storytelling</span>
+                                    <div class="m-rank-dot dot-peach"></div>
+                                </div>
+                            </div>
+
+                            <!-- Stats -->
+                            <div class="m-glass">
+                                <div class="m-card-label" style="color:var(--green);">Highlights</div>
+                                <div class="m-stat-grid">
+                                    <div class="m-stat-box">
+                                        <div class="m-stat-val">89<span class="pct">%</span></div>
+                                        <div class="m-stat-lbl">Team Retention</div>
+                                    </div>
+                                    <div class="m-stat-box">
+                                        <div class="m-stat-val">6</div>
+                                        <div class="m-stat-lbl">Markets Led</div>
+                                    </div>
+                                    <div class="m-stat-box">
+                                        <div class="m-stat-val">42</div>
+                                        <div class="m-stat-lbl">Campaigns</div>
+                                    </div>
+                                    <div class="m-stat-box">
+                                        <div class="m-stat-val">14</div>
+                                        <div class="m-stat-lbl">Years Active</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Journey -->
+                            <div class="m-glass">
+                                <div class="m-card-label" style="color:var(--peach);">Your Journey</div>
+                                <div class="m-exp-item">
+                                    <div class="m-exp-dot dot-peach"></div>
+                                    <div>
+                                        <div class="m-exp-company">Unilever</div>
+                                        <div class="m-exp-role">VP Marketing, APAC · 2021–Now</div>
+                                    </div>
+                                </div>
+                                <div class="m-exp-item">
+                                    <div class="m-exp-dot dot-pink"></div>
+                                    <div>
+                                        <div class="m-exp-company">Diageo</div>
+                                        <div class="m-exp-role">Sr. Director, Brand · 2017–21</div>
+                                    </div>
+                                </div>
+                                <div class="m-exp-item">
+                                    <div class="m-exp-dot dot-lavender"></div>
+                                    <div>
+                                        <div class="m-exp-company">Ogilvy Mumbai</div>
+                                        <div class="m-exp-role">Strategy Lead · 2014–17</div>
+                                    </div>
+                                </div>
+                                <div class="m-exp-item">
+                                    <div class="m-exp-dot dot-green"></div>
+                                    <div>
+                                        <div class="m-exp-company">WPP London</div>
+                                        <div class="m-exp-role">Account Manager · 2011–14</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Education -->
+                            <div class="m-glass" style="padding:12px 16px;">
+                                <div class="m-card-label" style="color:var(--yellow); margin-bottom:6px;">Education</div>
+                                <div style="font-size:9px;font-weight:500;color:#fff;line-height:1.5;">MBA Marketing — IIM Ahmedabad</div>
+                                <div style="font-size:8px;font-weight:400;color:rgba(255,255,255,0.4);line-height:1.5;">BA Economics — St. Xavier's, Mumbai</div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+                <span class="device-label">Mobile — 320 × 620</span>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>
