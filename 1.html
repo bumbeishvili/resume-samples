@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Concept 01 / 20 — Clean Editorial</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  /* ── Reset & Outer Page ── */
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+  body {
+    background: #0a0a0a;
+    color: #999;
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 24px 80px;
+  }
+
+  /* ── Concept Header ── */
+  .concept-header {
+    width: 100%;
+    max-width: 1260px;
+    margin-bottom: 40px;
+  }
+  .concept-header .label {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #555;
+    margin-bottom: 8px;
+  }
+  .concept-header .title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 32px;
+    font-weight: 300;
+    color: #e0e0e0;
+    margin-bottom: 6px;
+  }
+  .concept-header .meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 12px;
+  }
+  .concept-header .tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border: 1px solid #333;
+    border-radius: 3px;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #888;
+  }
+  .concept-header .desc {
+    color: #666;
+    font-size: 13px;
+  }
+
+  /* ── Device Row ── */
+  .device-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 48px;
+    max-width: 1260px;
+  }
+
+  /* ── Desktop Frame ── */
+  .desktop-frame {
+    width: 840px;
+    min-width: 840px;
+    height: 678px;
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 25px 80px rgba(0,0,0,.45), 0 2px 8px rgba(0,0,0,.3);
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* ── Mobile Frame ── */
+  .mobile-frame {
+    width: 320px;
+    min-width: 320px;
+    height: 620px;
+    background: #111;
+    border-radius: 28px;
+    border: 5px solid #111;
+    box-shadow: 0 25px 80px rgba(0,0,0,.45), 0 2px 8px rgba(0,0,0,.3);
+    position: relative;
+    overflow: hidden;
+  }
+  .mobile-frame::before {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 24px;
+    background: #111;
+    border-radius: 0 0 14px 14px;
+    z-index: 100;
+  }
+  .mobile-inner {
+    width: 100%;
+    height: 100%;
+    border-radius: 23px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: #fff;
+  }
+
+  /* ═══════════════════════════════════════
+     RESUME STYLES — DESKTOP
+     ═══════════════════════════════════════ */
+  .resume-desktop {
+    display: flex;
+    height: 100%;
+    font-family: 'DM Sans', sans-serif;
+    color: #2a2a2a;
+    font-size: 10px;
+    line-height: 1.55;
+  }
+
+  /* Sidebar */
+  .rd-sidebar {
+    width: 250px;
+    min-width: 250px;
+    background: #1a1a1e;
+    color: #c8c5be;
+    padding: 40px 26px 30px;
+    display: flex;
+    flex-direction: column;
+  }
+  .rd-sidebar .name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 24px;
+    font-weight: 300;
+    color: #f0ece4;
+    line-height: 1.15;
+    margin-bottom: 4px;
+    letter-spacing: -0.3px;
+  }
+  .rd-sidebar .role {
+    font-size: 9px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: #908c84;
+    margin-bottom: 28px;
+  }
+  .rd-sidebar .section-title {
+    font-size: 8px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #605d56;
+    margin-bottom: 10px;
+    margin-top: 24px;
+  }
+  .rd-sidebar .section-title:first-of-type { margin-top: 0; }
+  .rd-sidebar .contact-line {
+    font-size: 9.5px;
+    color: #a09d96;
+    margin-bottom: 4px;
+    line-height: 1.5;
+  }
+  .rd-sidebar .skill-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .rd-sidebar .skill-pill {
+    font-size: 8.5px;
+    padding: 3px 8px;
+    border: 1px solid #3a3a3e;
+    border-radius: 2px;
+    color: #a09d96;
+    letter-spacing: 0.3px;
+  }
+  .rd-sidebar .award-item {
+    margin-bottom: 8px;
+  }
+  .rd-sidebar .award-name {
+    color: #d0cdc6;
+    font-size: 9.5px;
+    font-weight: 500;
+  }
+  .rd-sidebar .award-detail {
+    color: #706d66;
+    font-size: 8.5px;
+  }
+  .rd-sidebar .education-item {
+    margin-bottom: 8px;
+  }
+  .rd-sidebar .edu-degree {
+    color: #c0bdb6;
+    font-size: 9.5px;
+    font-weight: 500;
+  }
+  .rd-sidebar .edu-school {
+    color: #706d66;
+    font-size: 8.5px;
+  }
+
+  /* Main Column */
+  .rd-main {
+    flex: 1;
+    padding: 40px 34px 30px;
+    overflow: hidden;
+  }
+  .rd-main .section-header {
+    font-size: 8px;
+    letter-spacing: 3.5px;
+    text-transform: uppercase;
+    color: #999;
+    border-bottom: 1px solid #e0ddd6;
+    padding-bottom: 6px;
+    margin-bottom: 18px;
+    margin-top: 28px;
+  }
+  .rd-main .section-header:first-child { margin-top: 0; }
+
+  .rd-main .intro {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.55;
+    color: #3a3a3a;
+    margin-bottom: 6px;
+    font-style: italic;
+  }
+
+  .exp-entry { margin-bottom: 16px; }
+  .exp-entry:last-child { margin-bottom: 0; }
+  .exp-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 2px;
+  }
+  .exp-company {
+    font-weight: 600;
+    font-size: 11px;
+    color: #1a1a1e;
+  }
+  .exp-dates {
+    font-size: 8.5px;
+    color: #999;
+    letter-spacing: 0.5px;
+  }
+  .exp-role {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 11.5px;
+    color: #555;
+    font-style: italic;
+    margin-bottom: 4px;
+  }
+  .exp-desc {
+    font-size: 9.5px;
+    color: #666;
+    line-height: 1.55;
+  }
+
+  /* ═══════════════════════════════════════
+     RESUME STYLES — MOBILE
+     ═══════════════════════════════════════ */
+  .resume-mobile {
+    font-family: 'DM Sans', sans-serif;
+    color: #2a2a2a;
+    font-size: 10px;
+    line-height: 1.55;
+  }
+
+  .rm-header {
+    background: #1a1a1e;
+    padding: 48px 22px 24px;
+    color: #f0ece4;
+  }
+  .rm-header .name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px;
+    font-weight: 300;
+    line-height: 1.1;
+    margin-bottom: 4px;
+  }
+  .rm-header .role {
+    font-size: 8px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: #908c84;
+    margin-bottom: 14px;
+  }
+  .rm-header .contact-row {
+    font-size: 8.5px;
+    color: #706d66;
+    line-height: 1.6;
+  }
+
+  .rm-body {
+    padding: 22px;
+  }
+  .rm-section-title {
+    font-size: 7.5px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: #999;
+    border-bottom: 1px solid #e0ddd6;
+    padding-bottom: 5px;
+    margin-bottom: 14px;
+    margin-top: 22px;
+  }
+  .rm-section-title:first-child { margin-top: 0; }
+
+  .rm-intro {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 13px;
+    font-style: italic;
+    line-height: 1.5;
+    color: #3a3a3a;
+    margin-bottom: 4px;
+  }
+
+  .rm-exp-entry { margin-bottom: 14px; }
+  .rm-exp-company {
+    font-weight: 600;
+    font-size: 10.5px;
+    color: #1a1a1e;
+  }
+  .rm-exp-meta {
+    font-size: 8px;
+    color: #999;
+    margin-bottom: 2px;
+  }
+  .rm-exp-role {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 11px;
+    color: #555;
+    font-style: italic;
+    margin-bottom: 3px;
+  }
+  .rm-exp-desc {
+    font-size: 9px;
+    color: #666;
+    line-height: 1.5;
+  }
+
+  .rm-skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 6px;
+  }
+  .rm-skill-pill {
+    font-size: 8px;
+    padding: 3px 8px;
+    border: 1px solid #ddd;
+    border-radius: 2px;
+    color: #666;
+  }
+  .rm-award-item { margin-bottom: 6px; }
+  .rm-award-name { font-size: 9.5px; font-weight: 500; color: #2a2a2a; }
+  .rm-award-detail { font-size: 8px; color: #999; }
+
+  .rm-edu-item { margin-bottom: 6px; }
+  .rm-edu-degree { font-size: 9.5px; font-weight: 500; color: #2a2a2a; }
+  .rm-edu-school { font-size: 8px; color: #999; }
+
+  /* scrollbar for mobile */
+  .mobile-inner::-webkit-scrollbar { width: 0; }
+</style>
+</head>
+<body>
+
+<!-- ── Concept Header ── -->
+<div class="concept-header">
+  <div class="label">Concept 01 / 20</div>
+  <div class="title">Clean Editorial</div>
+  <div class="meta">
+    <span class="tag">Mild</span>
+    <span class="desc">Swiss grid, dark sidebar, spaced caps — an elevated classic</span>
+  </div>
+</div>
+
+<!-- ── Device Row ── -->
+<div class="device-row">
+
+  <!-- ▸ DESKTOP ▸ -->
+  <div class="desktop-frame">
+    <div class="resume-desktop">
+
+      <!-- Sidebar -->
+      <div class="rd-sidebar">
+        <div class="name">Aurelia<br>Voss</div>
+        <div class="role">Editorial Director</div>
+
+        <div class="section-title">Contact</div>
+        <div class="contact-line">London, United Kingdom</div>
+        <div class="contact-line">aurelia@voss.studio</div>
+        <div class="contact-line">+44 7700 900 212</div>
+        <div class="contact-line">voss.studio</div>
+
+        <div class="section-title">Skills</div>
+        <div class="skill-list">
+          <span class="skill-pill">InDesign</span>
+          <span class="skill-pill">Figma</span>
+          <span class="skill-pill">Editorial Strategy</span>
+          <span class="skill-pill">Brand Voice</span>
+          <span class="skill-pill">Art Direction</span>
+          <span class="skill-pill">Typography</span>
+          <span class="skill-pill">Team Leadership</span>
+        </div>
+
+        <div class="section-title">Awards</div>
+        <div class="award-item">
+          <div class="award-name">D&AD Yellow Pencil</div>
+          <div class="award-detail">Magazine Design — 2018</div>
+        </div>
+        <div class="award-item">
+          <div class="award-name">SPD Merit Award</div>
+          <div class="award-detail">Editorial Series — 2020</div>
+        </div>
+        <div class="award-item">
+          <div class="award-name">European Design Award</div>
+          <div class="award-detail">Brand Identity — 2022</div>
+        </div>
+
+        <div class="section-title">Education</div>
+        <div class="education-item">
+          <div class="edu-degree">MA Typography & Graphic Communication</div>
+          <div class="edu-school">University of Reading, 2014</div>
+        </div>
+        <div class="education-item">
+          <div class="edu-degree">BA English Literature</div>
+          <div class="edu-school">University College London, 2012</div>
+        </div>
+      </div>
+
+      <!-- Main -->
+      <div class="rd-main">
+        <div class="section-header">Profile</div>
+        <div class="intro">
+          Editorial director with a decade of shaping how readers encounter ideas — from page to screen, from brand voice to visual rhythm. I believe typography is an act of hospitality.
+        </div>
+
+        <div class="section-header">Experience</div>
+
+        <div class="exp-entry">
+          <div class="exp-top">
+            <span class="exp-company">Frieze</span>
+            <span class="exp-dates">2021 — Present</span>
+          </div>
+          <div class="exp-role">Editorial Director</div>
+          <div class="exp-desc">Leading editorial vision across print and digital for a global contemporary art platform. Overseeing a 12-person team spanning London and New York. Redesigned the digital magazine experience, increasing engagement by 38%.</div>
+        </div>
+
+        <div class="exp-entry">
+          <div class="exp-top">
+            <span class="exp-company">The Guardian</span>
+            <span class="exp-dates">2018 — 2021</span>
+          </div>
+          <div class="exp-role">Senior Design Editor</div>
+          <div class="exp-desc">Directed visual storytelling for features and long-form. Led the typography refresh for the Weekend magazine. Collaborated with data and interactive teams on award-winning visual essays.</div>
+        </div>
+
+        <div class="exp-entry">
+          <div class="exp-top">
+            <span class="exp-company">Wallpaper*</span>
+            <span class="exp-dates">2015 — 2018</span>
+          </div>
+          <div class="exp-role">Design Editor</div>
+          <div class="exp-desc">Shaped visual identity for design, architecture, and lifestyle coverage. Produced 36 issues and 4 special editions. Managed freelance photographer and illustrator relationships.</div>
+        </div>
+
+        <div class="exp-entry">
+          <div class="exp-top">
+            <span class="exp-company">Monocle</span>
+            <span class="exp-dates">2012 — 2015</span>
+          </div>
+          <div class="exp-role">Junior Editor → Associate Editor</div>
+          <div class="exp-desc">Contributed to editorial planning, copy editing, and layout across print, radio, and digital channels. Reported from 14 countries across three continents.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ▸ MOBILE ▸ -->
+  <div class="mobile-frame">
+    <div class="mobile-inner">
+      <div class="resume-mobile">
+
+        <div class="rm-header">
+          <div class="name">Aurelia Voss</div>
+          <div class="role">Editorial Director</div>
+          <div class="contact-row">
+            London, UK · aurelia@voss.studio · voss.studio
+          </div>
+        </div>
+
+        <div class="rm-body">
+          <div class="rm-section-title">Profile</div>
+          <div class="rm-intro">A decade of shaping how readers encounter ideas — from page to screen, from brand voice to visual rhythm.</div>
+
+          <div class="rm-section-title">Experience</div>
+
+          <div class="rm-exp-entry">
+            <div class="rm-exp-company">Frieze</div>
+            <div class="rm-exp-meta">Editorial Director · 2021 — Present</div>
+            <div class="rm-exp-desc">Leading editorial vision across print and digital. Redesigned the digital magazine, increasing engagement 38%.</div>
+          </div>
+
+          <div class="rm-exp-entry">
+            <div class="rm-exp-company">The Guardian</div>
+            <div class="rm-exp-meta">Senior Design Editor · 2018 — 2021</div>
+            <div class="rm-exp-desc">Directed visual storytelling for features and long-form. Led the Weekend magazine typography refresh.</div>
+          </div>
+
+          <div class="rm-exp-entry">
+            <div class="rm-exp-company">Wallpaper*</div>
+            <div class="rm-exp-meta">Design Editor · 2015 — 2018</div>
+            <div class="rm-exp-desc">Shaped visual identity across design, architecture, and lifestyle. Produced 36 issues and 4 special editions.</div>
+          </div>
+
+          <div class="rm-exp-entry">
+            <div class="rm-exp-company">Monocle</div>
+            <div class="rm-exp-meta">Junior → Associate Editor · 2012 — 2015</div>
+            <div class="rm-exp-desc">Editorial planning, copy, and layout across print, radio, and digital. Reported from 14 countries.</div>
+          </div>
+
+          <div class="rm-section-title">Skills</div>
+          <div class="rm-skills">
+            <span class="rm-skill-pill">InDesign</span>
+            <span class="rm-skill-pill">Figma</span>
+            <span class="rm-skill-pill">Editorial Strategy</span>
+            <span class="rm-skill-pill">Brand Voice</span>
+            <span class="rm-skill-pill">Art Direction</span>
+            <span class="rm-skill-pill">Typography</span>
+          </div>
+
+          <div class="rm-section-title">Awards</div>
+          <div class="rm-award-item">
+            <div class="rm-award-name">D&AD Yellow Pencil</div>
+            <div class="rm-award-detail">Magazine Design — 2018</div>
+          </div>
+          <div class="rm-award-item">
+            <div class="rm-award-name">SPD Merit Award</div>
+            <div class="rm-award-detail">Editorial Series — 2020</div>
+          </div>
+
+          <div class="rm-section-title">Education</div>
+          <div class="rm-edu-item">
+            <div class="rm-edu-degree">MA Typography & Graphic Comm.</div>
+            <div class="rm-edu-school">University of Reading, 2014</div>
+          </div>
+          <div class="rm-edu-item">
+            <div class="rm-edu-degree">BA English Literature</div>
+            <div class="rm-edu-school">UCL, 2012</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
