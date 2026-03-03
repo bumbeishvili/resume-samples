@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Concept 03 / 20 - Card System</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html { -webkit-font-smoothing: antialiased; }
+  body { background: #0a0a0a; color: #999; font-family: Outfit, sans-serif; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 48px 24px 80px; }
+  .concept-header { width: 100%; max-width: 1260px; margin-bottom: 40px; }
+  .concept-header .label { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #555; margin-bottom: 8px; }
+  .concept-header .title { font-size: 32px; font-weight: 300; color: #e0e0e0; margin-bottom: 6px; }
+  .concept-header .meta { display: flex; align-items: center; gap: 16px; font-size: 12px; }
+  .concept-header .tag { display: inline-block; padding: 3px 10px; border: 1px solid #333; border-radius: 3px; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #888; }
+  .concept-header .desc { color: #666; font-size: 13px; }
+  .device-row { display: flex; align-items: flex-start; gap: 48px; max-width: 1260px; }
+  .desktop-frame { width: 840px; min-width: 840px; height: 678px; border-radius: 6px; box-shadow: 0 25px 80px rgba(0,0,0,.45), 0 2px 8px rgba(0,0,0,.3); overflow: hidden; background: #f4f3f0; }
+  .mobile-frame { width: 320px; min-width: 320px; height: 620px; background: #111; border-radius: 28px; border: 5px solid #111; box-shadow: 0 25px 80px rgba(0,0,0,.45), 0 2px 8px rgba(0,0,0,.3); position: relative; overflow: hidden; }
+  .mobile-frame::before { content: ""; position: absolute; top: 5px; left: 50%; transform: translateX(-50%); width: 100px; height: 24px; background: #111; border-radius: 0 0 14px 14px; z-index: 100; }
+  .mobile-inner { width: 100%; height: 100%; border-radius: 23px; overflow-y: auto; overflow-x: hidden; background: #f4f3f0; }
+  .mobile-inner::-webkit-scrollbar { width: 0; }
+  .rd { width: 100%; height: 100%; padding: 24px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; font-size: 10px; color: #3a3a3a; overflow: hidden; }
+  .card { background: #fff; border-radius: 14px; padding: 18px; box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 12px rgba(0,0,0,.04); display: flex; flex-direction: column; position: relative; overflow: hidden; }
+  .card-name { grid-column: span 2; background: #1a1a1e; color: #fff; padding: 22px 24px; }
+  .card-name .avatar-row { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+  .card-name .avatar { width: 48px; height: 48px; border-radius: 12px; background: #2e2e34; display: flex; align-items: center; justify-content: center; }
+  .card-name .avatar svg { width: 28px; height: 28px; color: #888; }
+  .card-name .name { font-size: 22px; font-weight: 700; line-height: 1.1; letter-spacing: -0.3px; }
+  .card-name .role { font-size: 10px; font-weight: 400; color: #a0a0a6; margin-top: 2px; }
+  .card-name .bio { font-size: 10.5px; line-height: 1.55; color: #b0b0b6; font-weight: 300; }
+  .card-name .location-row { margin-top: auto; padding-top: 10px; display: flex; align-items: center; gap: 5px; font-size: 9px; color: #666; }
+  .card-name .location-row svg { width: 12px; height: 12px; color: #555; }
+  .card-stat { justify-content: center; align-items: center; text-align: center; }
+  .card-stat .stat-num { font-size: 36px; font-weight: 800; line-height: 1; letter-spacing: -1px; }
+  .card-stat .stat-label { font-size: 9px; font-weight: 500; color: #999; text-transform: uppercase; letter-spacing: 1.5px; margin-top: 4px; }
+  .card-stat .stat-sub { font-size: 8px; color: #bbb; margin-top: 2px; font-weight: 300; }
+  .card-stat.accent-blue { border-top: 3px solid #3b82f6; } .card-stat.accent-blue .stat-num { color: #3b82f6; }
+  .card-stat.accent-green { border-top: 3px solid #22c55e; } .card-stat.accent-green .stat-num { color: #22c55e; }
+  .card-stat.accent-amber { border-top: 3px solid #f59e0b; } .card-stat.accent-amber .stat-num { color: #f59e0b; }
+  .card-stat.accent-purple { border-top: 3px solid #a855f7; } .card-stat.accent-purple .stat-num { color: #a855f7; }
+  .card-exp { grid-column: span 2; }
+  .card-label { font-size: 8px; font-weight: 600; letter-spacing: 2.5px; text-transform: uppercase; color: #bbb; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+  .card-label svg { width: 12px; height: 12px; color: #ccc; }
+  .card-label-line { flex: 1; height: 1px; background: #eee; }
+  .exp-list { display: flex; flex-direction: column; gap: 10px; }
+  .exp-item { display: flex; gap: 12px; align-items: flex-start; }
+  .exp-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 3px; flex-shrink: 0; }
+  .exp-dot.d1 { background: #1a1a1e; } .exp-dot.d2 { background: #6366f1; } .exp-dot.d3 { background: #f59e0b; }
+  .exp-company { font-weight: 600; font-size: 11px; color: #1a1a1e; }
+  .exp-role { font-size: 9.5px; color: #777; }
+  .exp-dates { font-size: 8px; color: #bbb; }
+  .skill-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+  .skill-tag { font-size: 8.5px; font-weight: 500; padding: 4px 9px; border-radius: 6px; background: #f4f3f0; color: #555; }
+  .skill-tag.primary { background: #1a1a1e; color: #fff; }
+  .edu-item { margin-bottom: 8px; } .edu-item:last-child { margin-bottom: 0; }
+  .edu-degree { font-weight: 600; font-size: 10px; color: #1a1a1e; }
+  .edu-school { font-size: 8.5px; color: #999; }
+  .card-contact { background: #fafaf8; border: 1px dashed #ddd; }
+  .contact-row { display: flex; align-items: center; gap: 7px; font-size: 9px; color: #666; }
+  .contact-row svg { width: 13px; height: 13px; color: #bbb; flex-shrink: 0; }
+  .rm { padding: 40px 14px 24px; display: flex; flex-direction: column; gap: 10px; font-size: 10px; color: #3a3a3a; }
+  .m-card { background: #fff; border-radius: 14px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 12px rgba(0,0,0,.04); }
+  .m-card-name { background: #1a1a1e; color: #fff; padding: 18px; }
+  .m-name-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .m-avatar { width: 40px; height: 40px; border-radius: 10px; background: #2e2e34; display: flex; align-items: center; justify-content: center; }
+  .m-avatar svg { width: 22px; height: 22px; color: #888; }
+  .m-name { font-size: 20px; font-weight: 700; line-height: 1.1; }
+  .m-role { font-size: 9px; color: #a0a0a6; margin-top: 1px; }
+  .m-bio { font-size: 9.5px; color: #b0b0b6; line-height: 1.5; font-weight: 300; }
+  .m-stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .m-stat { background: #fff; border-radius: 14px; padding: 14px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 12px rgba(0,0,0,.04); }
+  .m-stat-num { font-size: 28px; font-weight: 800; line-height: 1; letter-spacing: -0.5px; }
+  .m-stat-label { font-size: 7.5px; font-weight: 500; color: #999; text-transform: uppercase; letter-spacing: 1.2px; margin-top: 3px; }
+  .m-stat.blue { border-top: 3px solid #3b82f6; } .m-stat.blue .m-stat-num { color: #3b82f6; }
+  .m-stat.green { border-top: 3px solid #22c55e; } .m-stat.green .m-stat-num { color: #22c55e; }
+  .m-stat.amber { border-top: 3px solid #f59e0b; } .m-stat.amber .m-stat-num { color: #f59e0b; }
+  .m-stat.purple { border-top: 3px solid #a855f7; } .m-stat.purple .m-stat-num { color: #a855f7; }
+  .m-label { font-size: 7.5px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: #bbb; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+  .m-label svg { width: 11px; height: 11px; color: #ccc; }
+  .m-label-line { flex: 1; height: 1px; background: #eee; }
+  .m-exp-item { margin-bottom: 10px; } .m-exp-item:last-child { margin-bottom: 0; }
+  .m-exp-top { display: flex; align-items: center; gap: 8px; }
+  .m-exp-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .m-exp-company { font-weight: 600; font-size: 10.5px; color: #1a1a1e; }
+  .m-exp-role { font-size: 9px; color: #777; margin-left: 15px; }
+  .m-exp-dates { font-size: 7.5px; color: #bbb; margin-left: 15px; }
+  .m-skill-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+  .m-skill-tag { font-size: 8px; font-weight: 500; padding: 3px 8px; border-radius: 6px; background: #f4f3f0; color: #555; }
+  .m-skill-tag.primary { background: #1a1a1e; color: #fff; }
+  .m-contact-row { display: flex; align-items: center; gap: 6px; font-size: 8.5px; color: #666; margin-bottom: 5px; }
+  .m-contact-row:last-child { margin-bottom: 0; }
+  .m-contact-row svg { width: 12px; height: 12px; color: #bbb; flex-shrink: 0; }
+</style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <symbol id="ico-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+  <symbol id="ico-briefcase" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></symbol>
+  <symbol id="ico-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></symbol>
+  <symbol id="ico-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></symbol>
+  <symbol id="ico-map" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></symbol>
+  <symbol id="ico-code" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></symbol>
+  <symbol id="ico-graduation" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m22 10-10-5L2 10l10 5 10-5z"/><path d="M6 12v5c0 1 2 3 6 3s6-2 6-3v-5"/><path d="M22 10v6"/></symbol>
+  <symbol id="ico-zap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
+  <symbol id="ico-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></symbol>
+  <symbol id="ico-github" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.605-.015 2.896-.015 3.286 0 .315.21.694.825.576C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12z"/></symbol>
+</svg>
+
+<div class="concept-header">
+  <div class="label">Concept 03 / 20</div>
+  <div class="title">Card System</div>
+  <div class="meta">
+    <span class="tag">Mild</span>
+    <span class="desc">Modular cards, big stat numbers, dark hero - a dashboard-flavored resume</span>
+  </div>
+</div>
+
+<div class="device-row">
+  <div class="desktop-frame">
+    <div class="rd">
+      <div class="card card-name">
+        <div class="avatar-row">
+          <div class="avatar"><svg><use href="#ico-user"/></svg></div>
+          <div><div class="name">Marcus Chen</div><div class="role">Product Designer</div></div>
+        </div>
+        <div class="bio">Building products at the intersection of craft and scale. I care about systems that hold up at the edges - design that works when the data is messy, the screen is small, and the user is in a hurry.</div>
+        <div class="location-row"><svg><use href="#ico-map"/></svg> San Francisco, CA</div>
+      </div>
+      <div class="card card-stat accent-blue"><div class="stat-num">47</div><div class="stat-label">Products</div><div class="stat-sub">shipped to production</div></div>
+      <div class="card card-stat accent-green"><div class="stat-num">3.2M</div><div class="stat-label">Users</div><div class="stat-sub">across platforms</div></div>
+
+      <div class="card card-exp">
+        <div class="card-label"><svg><use href="#ico-briefcase"/></svg> Experience <span class="card-label-line"></span></div>
+        <div class="exp-list">
+          <div class="exp-item"><div class="exp-dot d1"></div><div><div class="exp-company">Stripe</div><div class="exp-role">Senior Product Designer</div><div class="exp-dates">2022 - Present</div></div></div>
+          <div class="exp-item"><div class="exp-dot d2"></div><div><div class="exp-company">Airbnb</div><div class="exp-role">Product Designer</div><div class="exp-dates">2019 - 2022</div></div></div>
+          <div class="exp-item"><div class="exp-dot d3"></div><div><div class="exp-company">IDEO</div><div class="exp-role">Interaction Designer</div><div class="exp-dates">2016 - 2019</div></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-label"><svg><use href="#ico-code"/></svg> Skills <span class="card-label-line"></span></div>
+        <div class="skill-tags">
+          <span class="skill-tag primary">Figma</span><span class="skill-tag primary">Design Systems</span><span class="skill-tag">Prototyping</span><span class="skill-tag">React</span><span class="skill-tag">User Research</span><span class="skill-tag">Motion</span><span class="skill-tag">Swift UI</span><span class="skill-tag">Data Viz</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-label"><svg><use href="#ico-graduation"/></svg> Education <span class="card-label-line"></span></div>
+        <div class="edu-item"><div class="edu-degree">BFA Interaction Design</div><div class="edu-school">California College of the Arts, 2016</div></div>
+        <div class="edu-item"><div class="edu-degree">CS Minor</div><div class="edu-school">UC Berkeley Extension, 2015</div></div>
+      </div>
+
+      <div class="card card-stat accent-amber"><div class="stat-num">12</div><div class="stat-label">Design Systems</div><div class="stat-sub">built &amp; maintained</div></div>
+      <div class="card card-stat accent-purple"><div class="stat-num">4</div><div class="stat-label">Patents</div><div class="stat-sub">UI interaction patterns</div></div>
+      <div class="card card-contact" style="grid-column: span 2;">
+        <div class="card-label"><svg><use href="#ico-zap"/></svg> Get in Touch <span class="card-label-line"></span></div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 6px 16px;">
+          <div class="contact-row"><svg><use href="#ico-mail"/></svg> marcus@chen.design</div>
+          <div class="contact-row"><svg><use href="#ico-globe"/></svg> chen.design</div>
+          <div class="contact-row"><svg><use href="#ico-phone"/></svg> +1 415 555 0198</div>
+          <div class="contact-row"><svg><use href="#ico-github"/></svg> github.com/marcuschen</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mobile-frame">
+    <div class="mobile-inner">
+      <div class="rm">
+        <div class="m-card m-card-name">
+          <div class="m-name-row">
+            <div class="m-avatar"><svg><use href="#ico-user"/></svg></div>
+            <div><div class="m-name">Marcus Chen</div><div class="m-role">Product Designer - San Francisco</div></div>
+          </div>
+          <div class="m-bio">Building products at the intersection of craft and scale. Systems that hold up at the edges.</div>
+        </div>
+        <div class="m-stats-row">
+          <div class="m-stat blue"><div class="m-stat-num">47</div><div class="m-stat-label">Products</div></div>
+          <div class="m-stat green"><div class="m-stat-num">3.2M</div><div class="m-stat-label">Users</div></div>
+          <div class="m-stat amber"><div class="m-stat-num">12</div><div class="m-stat-label">Systems</div></div>
+          <div class="m-stat purple"><div class="m-stat-num">4</div><div class="m-stat-label">Patents</div></div>
+        </div>
+        <div class="m-card">
+          <div class="m-label"><svg><use href="#ico-briefcase"/></svg> Experience <span class="m-label-line"></span></div>
+          <div class="m-exp-item"><div class="m-exp-top"><div class="m-exp-dot" style="background:#1a1a1e"></div><div class="m-exp-company">Stripe</div></div><div class="m-exp-role">Senior Product Designer</div><div class="m-exp-dates">2022 - Present</div></div>
+          <div class="m-exp-item"><div class="m-exp-top"><div class="m-exp-dot" style="background:#6366f1"></div><div class="m-exp-company">Airbnb</div></div><div class="m-exp-role">Product Designer</div><div class="m-exp-dates">2019 - 2022</div></div>
+          <div class="m-exp-item"><div class="m-exp-top"><div class="m-exp-dot" style="background:#f59e0b"></div><div class="m-exp-company">IDEO</div></div><div class="m-exp-role">Interaction Designer</div><div class="m-exp-dates">2016 - 2019</div></div>
+        </div>
+        <div class="m-card">
+          <div class="m-label"><svg><use href="#ico-code"/></svg> Skills <span class="m-label-line"></span></div>
+          <div class="m-skill-tags"><span class="m-skill-tag primary">Figma</span><span class="m-skill-tag primary">Design Systems</span><span class="m-skill-tag">Prototyping</span><span class="m-skill-tag">React</span><span class="m-skill-tag">User Research</span><span class="m-skill-tag">Motion</span></div>
+        </div>
+        <div class="m-card" style="background:#fafaf8; border:1px dashed #ddd;">
+          <div class="m-label"><svg><use href="#ico-zap"/></svg> Contact <span class="m-label-line"></span></div>
+          <div class="m-contact-row"><svg><use href="#ico-mail"/></svg> marcus@chen.design</div>
+          <div class="m-contact-row"><svg><use href="#ico-globe"/></svg> chen.design</div>
+          <div class="m-contact-row"><svg><use href="#ico-github"/></svg> github.com/marcuschen</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
