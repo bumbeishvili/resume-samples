@@ -4,1111 +4,455 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Life Map — Interactive CV</title>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Outfit:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Sora:wght@200;300;400;500;600&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg: #0C0B0F;
-  --bg-surface: #16151A;
-  --bg-panel: #1E1D23;
-  --text: #E8E4DF;
-  --text-muted: #8A8490;
-  --text-dim: #5A5660;
-  --accent-work: #E07A5F;
-  --accent-edu: #81B29A;
-  --accent-life: #F2CC8F;
-  --accent-cert: #A78BFA;
-  --line-color: rgba(255,255,255,0.06);
-  --line-active: rgba(255,255,255,0.2);
-  --glow-work: rgba(224,122,95,0.3);
-  --glow-edu: rgba(129,178,154,0.3);
-  --glow-life: rgba(242,204,143,0.3);
-  --glow-cert: rgba(167,139,250,0.3);
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:#08070D}
+body{font-family:'Sora',sans-serif;color:#E8E5F0;-webkit-font-smoothing:antialiased}
+
+/* ═══ AMBIENT BACKGROUND ═══ */
+.ambient{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+.ambient-orb{position:absolute;border-radius:50%;filter:blur(120px);opacity:0.12;animation:orbFloat 20s ease-in-out infinite}
+.ambient-orb:nth-child(1){width:600px;height:600px;background:#E07A5F;top:-10%;left:20%;animation-delay:0s}
+.ambient-orb:nth-child(2){width:500px;height:500px;background:#81B29A;bottom:-10%;right:10%;animation-delay:-7s}
+.ambient-orb:nth-child(3){width:450px;height:450px;background:#A78BFA;top:40%;left:60%;animation-delay:-14s}
+@keyframes orbFloat{0%,100%{transform:translate(0,0) scale(1)}25%{transform:translate(60px,-40px) scale(1.1)}50%{transform:translate(-30px,50px) scale(0.95)}75%{transform:translate(40px,20px) scale(1.05)}}
+
+/* ═══ GRID PATTERN ═══ */
+.grid-bg{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:0.03;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.3) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,0.3) 1px,transparent 1px);
+  background-size:80px 80px}
+
+/* ═══ CANVAS ═══ */
+.canvas-wrap{position:relative;width:100%;height:100%;overflow:hidden;cursor:grab;z-index:2}
+.canvas-wrap.dragging{cursor:grabbing}
+.canvas{position:absolute;width:3200px;height:2200px;will-change:transform;transition:transform 0.08s linear}
+
+/* ═══ PARTICLES ═══ */
+.particle{position:absolute;border-radius:50%;background:rgba(255,255,255,0.15);pointer-events:none;animation:particleDrift linear infinite}
+@keyframes particleDrift{0%{transform:translateY(0) scale(1);opacity:0}10%{opacity:1}90%{opacity:1}100%{transform:translateY(-200px) scale(0);opacity:0}}
+
+/* ═══ SVG CONNECTIONS ═══ */
+.connections-svg{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:2}
+.conn-path{fill:none;stroke:url(#lineGrad);stroke-width:1;opacity:0.15;transition:opacity 0.6s ease,stroke-width 0.6s ease}
+.conn-path.highlighted{opacity:0.6;stroke-width:2}
+.conn-path.cross{stroke-dasharray:8 6}
+.conn-flow{fill:none;stroke:rgba(255,255,255,0.4);stroke-width:2;stroke-dasharray:4 20;stroke-linecap:round;opacity:0;transition:opacity 0.6s ease}
+.conn-flow.highlighted{opacity:0.8;animation:flowDash 1.5s linear infinite}
+@keyframes flowDash{to{stroke-dashoffset:-24}}
+
+/* ═══ NODES ═══ */
+.node{position:absolute;z-index:10;cursor:pointer;opacity:0;animation:nodeAppear 0.8s cubic-bezier(0.16,1,0.3,1) forwards}
+@keyframes nodeAppear{from{opacity:0;transform:scale(0.3) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+
+.node:hover{z-index:15}
+.node.active{z-index:20}
+
+.node-core{position:relative;display:flex;align-items:center;justify-content:center;transition:transform 0.5s cubic-bezier(0.16,1,0.3,1)}
+.node:hover .node-core{transform:scale(1.15)}
+.node.active .node-core{transform:scale(1.2)}
+
+.node-shape{position:relative;transition:box-shadow 0.5s ease}
+
+.shape-circle{border-radius:50%}
+.shape-diamond{border-radius:6px;transform:rotate(45deg)}
+.shape-square{border-radius:8px}
+.shape-hexagon{border-radius:50%;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)}
+
+/* Glow ring */
+.node-glow{position:absolute;inset:-12px;border-radius:50%;opacity:0;transition:opacity 0.5s ease;pointer-events:none}
+.node:hover .node-glow{opacity:0.4}
+.node.active .node-glow{opacity:0.6;animation:glowPulse 2s ease-in-out infinite}
+@keyframes glowPulse{0%,100%{transform:scale(1);opacity:0.6}50%{transform:scale(1.3);opacity:0.2}}
+
+/* Orbit ring */
+.node-orbit{position:absolute;inset:-20px;border-radius:50%;border:1px solid;opacity:0;transition:opacity 0.5s ease;pointer-events:none;animation:orbitSpin 12s linear infinite}
+.node:hover .node-orbit,.node.active .node-orbit{opacity:0.2}
+@keyframes orbitSpin{to{transform:rotate(360deg)}}
+
+.node-orbit-dot{position:absolute;width:4px;height:4px;border-radius:50%;top:-2px;left:50%;margin-left:-2px}
+
+/* Label */
+.node-label{position:absolute;top:calc(100% + 14px);left:50%;transform:translateX(-50%) translateY(4px);white-space:nowrap;text-align:center;pointer-events:none;opacity:0;transition:opacity 0.4s ease,transform 0.4s ease}
+.node:hover .node-label,.node.active .node-label{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.node-label-text{font-size:11px;font-weight:500;letter-spacing:0.03em;color:#C8C4D4;text-shadow:0 2px 12px rgba(0,0,0,0.8)}
+.node-label-year{font-family:'JetBrains Mono',monospace;font-size:9px;color:#6B6580;display:block;margin-top:3px}
+
+/* ═══ DETAIL PANEL ═══ */
+.panel-backdrop{position:fixed;inset:0;z-index:90;background:rgba(8,7,13,0.5);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity 0.4s ease}
+.panel-backdrop.visible{opacity:1;pointer-events:auto}
+
+.detail-panel{position:fixed;z-index:100;width:400px;max-width:calc(100vw - 24px);max-height:75vh;overflow-y:auto;
+  background:linear-gradient(145deg,rgba(30,28,40,0.92),rgba(20,18,30,0.95));
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:24px;padding:32px;
+  box-shadow:0 40px 80px rgba(0,0,0,0.6),inset 0 1px 0 rgba(255,255,255,0.05);
+  opacity:0;transform:translateY(16px) scale(0.95);
+  transition:opacity 0.45s cubic-bezier(0.16,1,0.3,1),transform 0.45s cubic-bezier(0.16,1,0.3,1);
+  pointer-events:none}
+.detail-panel.visible{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
+
+.detail-panel::-webkit-scrollbar{width:4px}
+.detail-panel::-webkit-scrollbar-track{background:transparent}
+.detail-panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:4px}
+
+.panel-accent-line{width:40px;height:3px;border-radius:3px;margin-bottom:16px}
+.panel-type{font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:0.16em;font-weight:500;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.panel-title{font-family:'Playfair Display',serif;font-size:1.65rem;font-weight:400;line-height:1.25;margin-bottom:6px;letter-spacing:-0.01em}
+.panel-org{font-size:0.9rem;color:#9B96A8;font-weight:300;margin-bottom:4px}
+.panel-date{font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:#5E5A6B;margin-bottom:20px;letter-spacing:0.04em}
+.panel-desc{font-size:0.88rem;color:#A09BAE;font-weight:300;line-height:1.8;margin-bottom:20px}
+.panel-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:22px}
+.panel-tag{padding:5px 12px;font-size:0.7rem;font-weight:500;border-radius:100px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.06);color:#8E89A0;letter-spacing:0.03em;transition:background 0.2s ease,border-color 0.2s ease}
+.panel-tag:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.12)}
+.panel-divider{height:1px;background:linear-gradient(to right,transparent,rgba(255,255,255,0.06),transparent);margin:4px 0 16px}
+.panel-conn-label{font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:0.14em;color:#5E5A6B;margin-bottom:10px}
+.panel-conn-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);border-radius:12px;cursor:pointer;transition:all 0.25s ease;font-size:0.82rem;color:#8E89A0;margin-bottom:6px}
+.panel-conn-item:hover{background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.1);color:#E8E5F0;transform:translateX(4px)}
+.panel-conn-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.panel-close{position:absolute;top:20px;right:20px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.06);cursor:pointer;display:flex;align-items:center;justify-content:center;color:#6B6580;transition:all 0.25s ease}
+.panel-close:hover{background:rgba(255,255,255,0.1);color:#E8E5F0;transform:rotate(90deg)}
+.panel-close svg{width:14px;height:14px}
+
+/* ═══ TOPBAR ═══ */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:80;padding:24px 28px;display:flex;justify-content:space-between;align-items:center;pointer-events:none;
+  background:linear-gradient(to bottom,rgba(8,7,13,0.7),transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.topbar>*{pointer-events:auto}
+.topbar-name{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:400;letter-spacing:-0.01em}
+.topbar-role{font-size:0.72rem;color:#6B6580;font-weight:300;margin-top:2px;letter-spacing:0.04em}
+.topbar-actions{display:flex;gap:8px}
+.topbar-btn{padding:8px 18px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:100px;color:#8E89A0;font-family:inherit;font-size:0.78rem;font-weight:400;cursor:pointer;transition:all 0.3s ease;display:flex;align-items:center;gap:6px;backdrop-filter:blur(10px)}
+.topbar-btn:hover{background:rgba(255,255,255,0.08);color:#E8E5F0;border-color:rgba(255,255,255,0.15);transform:translateY(-1px)}
+.topbar-btn svg{width:14px;height:14px}
+
+/* ═══ LEGEND ═══ */
+.legend{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:80;display:flex;gap:24px;padding:14px 28px;
+  background:rgba(20,18,30,0.7);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border:1px solid rgba(255,255,255,0.06);border-radius:100px;
+  animation:legendSlideUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.5s both}
+@keyframes legendSlideUp{from{opacity:0;transform:translateX(-50%) translateY(20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+.legend-item{display:flex;align-items:center;gap:8px;font-size:11px;color:#6B6580;font-weight:400;transition:color 0.3s ease;cursor:default}
+.legend-item:hover{color:#C8C4D4}
+.legend-shape{width:10px;height:10px;flex-shrink:0;transition:transform 0.3s ease}
+.legend-item:hover .legend-shape{transform:scale(1.3)}
+.ls-circle{border-radius:50%}
+.ls-diamond{transform:rotate(45deg);border-radius:2px}
+.ls-square{border-radius:3px}
+.ls-hex{clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)}
+
+/* ═══ MINIMAP ═══ */
+.minimap{position:fixed;bottom:24px;right:24px;width:160px;height:110px;
+  background:rgba(20,18,30,0.7);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border:1px solid rgba(255,255,255,0.06);border-radius:14px;z-index:80;overflow:hidden;cursor:pointer;
+  animation:legendSlideUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.6s both}
+.minimap-dot{position:absolute;border-radius:50%;pointer-events:none}
+.minimap-viewport{position:absolute;border:1px solid rgba(255,255,255,0.3);border-radius:2px;background:rgba(255,255,255,0.04);pointer-events:none}
+
+/* ═══ HINT ═══ */
+.hint{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:70;text-align:center;pointer-events:none;opacity:0;animation:hintIn 1s ease 1.2s forwards}
+@keyframes hintIn{to{opacity:1}}
+.hint.hidden{opacity:0!important;transition:opacity 0.8s ease}
+.hint-text{font-size:0.85rem;color:#4A4660;font-weight:300;letter-spacing:0.05em}
+.hint-keys{display:flex;gap:12px;justify-content:center;margin-top:12px}
+.hint-key{padding:6px 14px;border:1px solid rgba(255,255,255,0.06);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:10px;color:#5E5A6B;background:rgba(255,255,255,0.02)}
+
+/* ═══ RESPONSIVE ═══ */
+@media(max-width:700px){
+  .legend{bottom:14px;gap:16px;padding:10px 20px}
+  .minimap{display:none}
+  .topbar{padding:16px 18px}
+  .detail-panel{position:fixed;bottom:0;left:0;right:0;top:auto;width:100%;max-width:100%;max-height:65vh;border-radius:24px 24px 0 0;transform:translateY(24px) scale(1)}
+  .detail-panel.visible{transform:translateY(0) scale(1)}
+  .hint-keys{display:none}
 }
-
-* { margin:0; padding:0; box-sizing:border-box; }
-html, body { height:100%; overflow:hidden; }
-
-body {
-  font-family: 'Outfit', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  -webkit-font-smoothing: antialiased;
-}
-
-/* ── CANVAS AREA ── */
-.canvas-wrap {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  cursor: grab;
-}
-.canvas-wrap.dragging { cursor: grabbing; }
-
-.canvas {
-  position: absolute;
-  width: 3000px;
-  height: 2000px;
-  top: 0;
-  left: 0;
-  will-change: transform;
-}
-
-/* ── SVG CONNECTIONS ── */
-.connections-svg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.conn-line {
-  stroke: var(--line-color);
-  stroke-width: 1.2;
-  fill: none;
-  transition: stroke 0.4s ease, stroke-width 0.4s ease;
-}
-
-.conn-line.highlighted {
-  stroke: var(--line-active);
-  stroke-width: 2;
-}
-
-.conn-line.story {
-  stroke-dasharray: 6 4;
-}
-
-/* ── NODES ── */
-.node {
-  position: absolute;
-  z-index: 10;
-  cursor: pointer;
-  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
-}
-
-.node:hover { transform: scale(1.08); }
-.node.active { transform: scale(1.12); z-index: 20; }
-
-.node-shape {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.node-dot {
-  border-radius: 50%;
-  transition: box-shadow 0.4s ease;
-}
-
-.node-diamond {
-  transform: rotate(45deg);
-  border-radius: 4px;
-  transition: box-shadow 0.4s ease;
-}
-
-.node-square {
-  border-radius: 6px;
-  transition: box-shadow 0.4s ease;
-}
-
-.node-hex {
-  border-radius: 50%;
-  transition: box-shadow 0.4s ease;
-}
-
-.node.active .node-dot,
-.node.active .node-diamond,
-.node.active .node-square,
-.node.active .node-hex {
-  box-shadow: 0 0 30px var(--glow), 0 0 60px var(--glow);
-}
-
-.node-ring {
-  position: absolute;
-  border-radius: 50%;
-  border: 1px solid;
-  opacity: 0;
-  animation: pulse-ring 3s ease-in-out infinite;
-  pointer-events: none;
-}
-
-@keyframes pulse-ring {
-  0%, 100% { transform: scale(1); opacity: 0; }
-  50% { transform: scale(1.8); opacity: 0.15; }
-}
-
-.node-label {
-  position: absolute;
-  top: calc(100% + 10px);
-  left: 50%;
-  transform: translateX(-50%);
-  white-space: nowrap;
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  color: var(--text-muted);
-  text-align: center;
-  pointer-events: none;
-  opacity: 0.7;
-  transition: opacity 0.3s ease, color 0.3s ease;
-}
-
-.node:hover .node-label,
-.node.active .node-label {
-  opacity: 1;
-  color: var(--text);
-}
-
-.node-year {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 9px;
-  color: var(--text-dim);
-  display: block;
-  margin-top: 2px;
-}
-
-/* ── DETAIL PANEL ── */
-.panel-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  z-index: 90;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.panel-overlay.visible {
-  pointer-events: auto;
-  opacity: 1;
-}
-
-.detail-panel {
-  position: fixed;
-  z-index: 100;
-  width: 380px;
-  max-width: calc(100vw - 32px);
-  max-height: 70vh;
-  background: var(--bg-panel);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 16px;
-  padding: 28px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 80px var(--panel-glow, rgba(0,0,0,0));
-  opacity: 0;
-  transform: translateY(12px) scale(0.96);
-  transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.4,0,0.2,1);
-  pointer-events: none;
-  overflow-y: auto;
-}
-
-.detail-panel.visible {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-  pointer-events: auto;
-}
-
-.panel-type {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  font-weight: 500;
-  margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.panel-type-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.panel-title {
-  font-family: 'Instrument Serif', serif;
-  font-size: 1.6rem;
-  font-weight: 400;
-  line-height: 1.2;
-  margin-bottom: 4px;
-}
-
-.panel-org {
-  font-size: 0.88rem;
-  color: var(--text-muted);
-  font-weight: 300;
-  margin-bottom: 6px;
-}
-
-.panel-date {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.72rem;
-  color: var(--text-dim);
-  margin-bottom: 16px;
-}
-
-.panel-desc {
-  font-size: 0.88rem;
-  color: var(--text-muted);
-  font-weight: 300;
-  line-height: 1.75;
-  margin-bottom: 16px;
-}
-
-.panel-connections-label {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--text-dim);
-  margin-bottom: 8px;
-}
-
-.panel-conn-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.panel-conn-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  background: rgba(255,255,255,0.03);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.2s ease;
-  font-size: 0.8rem;
-  color: var(--text-muted);
-}
-
-.panel-conn-item:hover {
-  background: rgba(255,255,255,0.06);
-  color: var(--text);
-}
-
-.panel-conn-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.panel-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 16px;
-}
-
-.panel-tag {
-  padding: 4px 10px;
-  font-size: 0.7rem;
-  font-weight: 500;
-  border-radius: 100px;
-  background: rgba(255,255,255,0.05);
-  color: var(--text-muted);
-  letter-spacing: 0.02em;
-}
-
-.panel-close {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.06);
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  transition: background 0.2s ease;
-}
-
-.panel-close:hover {
-  background: rgba(255,255,255,0.12);
-  color: var(--text);
-}
-
-.panel-close svg { width: 14px; height: 14px; }
-
-/* ── LEGEND ── */
-.legend {
-  position: fixed;
-  bottom: 24px;
-  left: 24px;
-  z-index: 80;
-  display: flex;
-  gap: 20px;
-  padding: 14px 20px;
-  background: rgba(22,21,26,0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 12px;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 11px;
-  color: var(--text-muted);
-  font-weight: 400;
-}
-
-.legend-shape {
-  width: 10px;
-  height: 10px;
-  flex-shrink: 0;
-}
-
-.legend-circle { border-radius: 50%; }
-.legend-diamond { transform: rotate(45deg); border-radius: 2px; }
-.legend-square { border-radius: 2px; }
-.legend-hex { border-radius: 50%; }
-
-/* ── TOP BAR ── */
-.topbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 80;
-  padding: 20px 24px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  pointer-events: none;
-}
-
-.topbar > * { pointer-events: auto; }
-
-.topbar-title {
-  font-family: 'Instrument Serif', serif;
-  font-size: 1.15rem;
-  font-weight: 400;
-  letter-spacing: -0.01em;
-}
-
-.topbar-subtitle {
-  font-size: 0.72rem;
-  color: var(--text-dim);
-  font-weight: 300;
-  margin-top: 1px;
-}
-
-.topbar-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.topbar-btn {
-  padding: 8px 16px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 100px;
-  color: var(--text-muted);
-  font-family: inherit;
-  font-size: 0.78rem;
-  font-weight: 400;
-  cursor: pointer;
-  transition: background 0.2s ease, color 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.topbar-btn:hover {
-  background: rgba(255,255,255,0.1);
-  color: var(--text);
-}
-
-.topbar-btn svg { width: 14px; height: 14px; }
-
-/* ── HINT ── */
-.hint {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%,-50%);
-  z-index: 70;
-  font-size: 0.82rem;
-  color: var(--text-dim);
-  pointer-events: none;
-  opacity: 1;
-  transition: opacity 1s ease;
-  text-align: center;
-}
-
-.hint.hidden { opacity: 0; }
-
-.hint-icon {
-  display: block;
-  margin: 0 auto 8px;
-  width: 32px;
-  height: 32px;
-  border: 1px solid var(--text-dim);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* ── GRAIN OVERLAY ── */
-.grain {
-  position: fixed;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  z-index: 200;
-  pointer-events: none;
-  opacity: 0.025;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-}
-
-/* ── MINIMAP ── */
-.minimap {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  width: 160px;
-  height: 107px;
-  background: rgba(22,21,26,0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,0.06);
-  border-radius: 10px;
-  z-index: 80;
-  overflow: hidden;
-  cursor: pointer;
-}
-
-.minimap-viewport {
-  position: absolute;
-  border: 1px solid rgba(255,255,255,0.25);
-  border-radius: 2px;
-  background: rgba(255,255,255,0.04);
-  pointer-events: none;
-  transition: left 0.1s, top 0.1s, width 0.1s, height 0.1s;
-}
-
-.minimap-dot {
-  position: absolute;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-/* ── RESPONSIVE ── */
-@media (max-width: 700px) {
-  .legend { 
-    bottom: 12px; left: 12px; right: 12px;
-    justify-content: center;
-    gap: 14px;
-    padding: 10px 14px;
-  }
-  .minimap { display: none; }
-  .topbar { padding: 14px 16px; }
-  .detail-panel {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    top: auto;
-    width: 100%;
-    max-width: 100%;
-    max-height: 60vh;
-    border-radius: 20px 20px 0 0;
-    transform: translateY(20px);
-  }
-  .detail-panel.visible {
-    transform: translateY(0);
-  }
-}
-
-/* ── FADE IN ── */
-@keyframes canvasFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-.canvas { animation: canvasFadeIn 1s ease both; }
 </style>
 </head>
 <body>
 
-<div class="grain"></div>
+<div class="ambient"><div class="ambient-orb"></div><div class="ambient-orb"></div><div class="ambient-orb"></div></div>
+<div class="grid-bg"></div>
 
-<!-- TOP BAR -->
 <div class="topbar">
-  <div>
-    <div class="topbar-title">Alex Morgan</div>
-    <div class="topbar-subtitle">Life-Career Map</div>
-  </div>
+  <div><div class="topbar-name">Alex Morgan</div><div class="topbar-role">Life-Career Map</div></div>
   <div class="topbar-actions">
     <button class="topbar-btn" onclick="resetView()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-      Reset
-    </button>
-    <button class="topbar-btn" onclick="toggleAll()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-      About
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Center
     </button>
   </div>
 </div>
 
-<!-- HINT -->
 <div class="hint" id="hint">
-  <div class="hint-icon">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 9l4 4L19 3"/></svg>
-  </div>
-  Drag to explore · Click nodes to reveal
+  <div class="hint-text">Drag to explore the map &middot; Click any node to reveal its story</div>
+  <div class="hint-keys"><span class="hint-key">Scroll to zoom</span><span class="hint-key">Click nodes</span><span class="hint-key">Drag to pan</span></div>
 </div>
 
-<!-- CANVAS -->
 <div class="canvas-wrap" id="canvasWrap">
   <div class="canvas" id="canvas">
-    <svg class="connections-svg" id="connectionsSvg"></svg>
+    <svg class="connections-svg" id="svgLayer" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="lineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="rgba(255,255,255,0.5)"/>
+          <stop offset="100%" stop-color="rgba(255,255,255,0.1)"/>
+        </linearGradient>
+      </defs>
+    </svg>
   </div>
 </div>
 
-<!-- DETAIL PANEL -->
-<div class="panel-overlay" id="panelOverlay" onclick="closePanel()"></div>
-<div class="detail-panel" id="detailPanel">
-  <button class="panel-close" onclick="closePanel()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
-  </button>
-  <div id="panelContent"></div>
+<div class="panel-backdrop" id="backdrop" onclick="closePanel()"></div>
+<div class="detail-panel" id="panel">
+  <button class="panel-close" onclick="closePanel()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+  <div id="panelInner"></div>
 </div>
 
-<!-- LEGEND -->
 <div class="legend">
-  <div class="legend-item">
-    <div class="legend-shape legend-circle" style="background:var(--accent-work)"></div>
-    Work
-  </div>
-  <div class="legend-item">
-    <div class="legend-shape legend-square" style="background:var(--accent-edu)"></div>
-    Education
-  </div>
-  <div class="legend-item">
-    <div class="legend-shape legend-diamond" style="background:var(--accent-life)"></div>
-    Life
-  </div>
-  <div class="legend-item">
-    <div class="legend-shape legend-hex" style="background:var(--accent-cert)"></div>
-    Certification
-  </div>
+  <div class="legend-item"><div class="legend-shape ls-circle" style="background:#E07A5F"></div>Work</div>
+  <div class="legend-item"><div class="legend-shape ls-square" style="background:#81B29A"></div>Education</div>
+  <div class="legend-item"><div class="legend-shape ls-diamond" style="background:#F2CC8F"></div>Life</div>
+  <div class="legend-item"><div class="legend-shape ls-hex" style="background:#A78BFA"></div>Certification</div>
 </div>
 
-<!-- MINIMAP -->
 <div class="minimap" id="minimap"></div>
 
 <script>
-// ════════════════════════════════════════
-// DATA — Each node is an experience
-// ════════════════════════════════════════
-const NODES = [
-  {
-    id: 'work-wanderlust',
-    type: 'work',
-    shape: 'dot',
-    size: 48,
-    x: 1500, y: 600,
-    title: 'Senior Product Designer',
-    org: 'Wanderlust Travel',
-    date: '2022 — Present',
-    desc: 'Redesigned the entire booking funnel, increasing conversion by 23%. Led 3 designers through a design system overhaul. Solo travel experience directly shaped the mobile-first search rethink.',
-    tags: ['Figma', 'Design Systems', 'User Research', 'A/B Testing'],
-    connections: ['life-solo-travel', 'work-finflow', 'cert-ux']
-  },
-  {
-    id: 'work-finflow',
-    type: 'work',
-    shape: 'dot',
-    size: 40,
-    x: 1050, y: 520,
-    title: 'Product Designer',
-    org: 'FinFlow',
-    date: '2019 — 2022',
-    desc: 'Owned the dashboard experience for 50k+ users. Data visualization patterns reduced support tickets by 40%. Deep collaboration with engineering on component architecture.',
-    tags: ['Dashboard Design', 'Data Viz', 'React', 'Prototyping'],
-    connections: ['edu-ba', 'work-eduspark', 'cert-ux']
-  },
-  {
-    id: 'work-eduspark',
-    type: 'work',
-    shape: 'dot',
-    size: 34,
-    x: 650, y: 680,
-    title: 'UX Designer',
-    org: 'EduSpark',
-    date: '2017 — 2019',
-    desc: 'Designed learning interfaces for K-12 platforms. Discovered that problem-solving skills in children are deeply influenced by how interfaces scaffold complexity — a career-defining insight.',
-    tags: ['EdTech', 'Accessibility', 'User Testing'],
-    connections: ['edu-ba', 'life-mentor']
-  },
-  {
-    id: 'work-freelance',
-    type: 'work',
-    shape: 'dot',
-    size: 26,
-    x: 1280, y: 880,
-    title: 'Freelance Designer',
-    org: 'Various Clients',
-    date: '2021 — 2022',
-    desc: 'Took on freelance projects while traveling. Worked remotely with startups in Berlin, Lisbon, and Bangkok. Learned to ship fast across time zones and cultures.',
-    tags: ['Remote Work', 'Startups', 'Branding'],
-    connections: ['life-solo-travel', 'work-wanderlust']
-  },
-  {
-    id: 'edu-ba',
-    type: 'edu',
-    shape: 'square',
-    size: 38,
-    x: 400, y: 480,
-    title: 'B.A. Visual Communication',
-    org: 'Royal Academy of Design',
-    date: '2013 — 2017',
-    desc: 'Specialized in interaction design and typography. Thesis: an interactive wayfinding system for hospitals that reduced navigation errors by 60% in user testing.',
-    tags: ['Interaction Design', 'Typography', 'Thesis'],
-    connections: ['work-eduspark', 'life-mentor', 'edu-highschool']
-  },
-  {
-    id: 'edu-highschool',
-    type: 'edu',
-    shape: 'square',
-    size: 24,
-    x: 200, y: 350,
-    title: 'High School',
-    org: 'Tbilisi International School',
-    date: '2009 — 2013',
-    desc: 'First encounter with design through the school magazine layout. Art teacher suggested pursuing visual communication — that single conversation set the trajectory.',
-    tags: ['First Spark', 'Art', 'Layout'],
-    connections: ['edu-ba', 'life-art-teacher']
-  },
-  {
-    id: 'cert-ux',
-    type: 'cert',
-    shape: 'hex',
-    size: 28,
-    x: 1200, y: 350,
-    title: 'UX Professional Certificate',
-    org: 'Google / Coursera',
-    date: '2020',
-    desc: 'Completed the full professional certificate. Focused on research methodologies and accessibility standards. Validated intuitions built through 3 years of practice.',
-    tags: ['Research Methods', 'Accessibility', 'WCAG'],
-    connections: ['work-finflow', 'work-wanderlust']
-  },
-  {
-    id: 'cert-data',
-    type: 'cert',
-    shape: 'hex',
-    size: 22,
-    x: 850, y: 320,
-    title: 'Data Visualization',
-    org: 'MIT OpenCourseWare',
-    date: '2019',
-    desc: 'Self-directed deep dive into data visualization principles. D3.js, Tufte, and the grammar of graphics. This directly prepared me for the FinFlow dashboard work.',
-    tags: ['D3.js', 'Tufte', 'Grammar of Graphics'],
-    connections: ['work-finflow']
-  },
-  {
-    id: 'life-solo-travel',
-    type: 'life',
-    shape: 'diamond',
-    size: 44,
-    x: 1600, y: 900,
-    title: '1 Year Solo Backpacking',
-    org: '14 Countries — SE Asia, S. America, E. Europe',
-    date: '2021 — 2022',
-    desc: 'A year away from screens taught me more about user empathy than any workshop. Navigating foreign booking systems with bad connectivity revealed exactly where travel UX fails. Every frustration became a design insight. Became conversational in Spanish.',
-    tags: ['Empathy', 'Cross-cultural', 'Travel Tech Insights', 'Spanish'],
-    connections: ['work-wanderlust', 'work-freelance', 'life-tbilisi']
-  },
-  {
-    id: 'life-mentor',
-    type: 'life',
-    shape: 'diamond',
-    size: 30,
-    x: 500, y: 800,
-    title: 'Design Mentorship',
-    org: 'Design for Good — Tbilisi Chapter',
-    date: '2023 — Present',
-    desc: 'Mentoring junior designers from non-traditional backgrounds. Monthly portfolio reviews and workshops on design thinking. Giving back what my art teacher gave me — direction.',
-    tags: ['Mentoring', 'Community', 'Workshops'],
-    connections: ['work-eduspark', 'edu-ba', 'life-art-teacher']
-  },
-  {
-    id: 'life-art-teacher',
-    type: 'life',
-    shape: 'diamond',
-    size: 22,
-    x: 250, y: 620,
-    title: 'The Art Teacher Conversation',
-    org: 'A single conversation that changed everything',
-    date: '2012',
-    desc: '"You see layout where others see decoration." That one sentence from my high school art teacher redirected my entire career path from engineering to visual communication.',
-    tags: ['Turning Point', 'Mentorship'],
-    connections: ['edu-highschool', 'edu-ba', 'life-mentor']
-  },
-  {
-    id: 'life-tbilisi',
-    type: 'life',
-    shape: 'diamond',
-    size: 26,
-    x: 1850, y: 750,
-    title: 'Return to Tbilisi',
-    org: 'Home base, new perspective',
-    date: '2022',
-    desc: 'Coming home after a year of travel with fresh eyes. Tbilisi\'s growing tech scene felt different now. Started the local design mentorship chapter. Everything connected.',
-    tags: ['Homecoming', 'Perspective'],
-    connections: ['life-solo-travel', 'life-mentor', 'work-wanderlust']
-  }
+const C={work:{main:'#E07A5F',glow:'rgba(224,122,95,0.35)',label:'Work Experience'},edu:{main:'#81B29A',glow:'rgba(129,178,154,0.35)',label:'Education'},life:{main:'#F2CC8F',glow:'rgba(242,204,143,0.35)',label:'Life Experience'},cert:{main:'#A78BFA',glow:'rgba(167,139,250,0.35)',label:'Certification'}};
+
+const N=[
+{id:'w1',type:'work',shape:'circle',size:54,x:1600,y:640,title:'Senior Product Designer',org:'Wanderlust Travel',date:'2022 \u2014 Present',
+  desc:'Redesigned the entire booking funnel, lifting conversion 23%. Led a team of 3 designers through a complete design system overhaul. Solo travel experience directly shaped the mobile-first search rethink.',
+  tags:['Figma','Design Systems','User Research','A/B Testing'],conn:['l1','w2','c1']},
+{id:'w2',type:'work',shape:'circle',size:44,x:1100,y:540,title:'Product Designer',org:'FinFlow',date:'2019 \u2014 2022',
+  desc:'Owned the dashboard experience for 50k+ users. Introduced data viz patterns that cut support tickets by 40%. Deep collaboration with engineering on component architecture.',
+  tags:['Dashboard','Data Viz','React','Prototyping'],conn:['e1','w3','c1','c2']},
+{id:'w3',type:'work',shape:'circle',size:38,x:680,y:700,title:'UX Designer',org:'EduSpark',date:'2017 \u2014 2019',
+  desc:'Designed learning interfaces for K-12 platforms. Discovered that problem-solving skills in children are deeply influenced by how interfaces scaffold complexity \u2014 a career-defining insight.',
+  tags:['EdTech','Accessibility','User Testing'],conn:['e1','l3']},
+{id:'w4',type:'work',shape:'circle',size:30,x:1350,y:920,title:'Freelance Designer',org:'Various Startups',date:'2021 \u2014 2022',
+  desc:'Took on freelance projects while traveling. Shipped remotely with teams in Berlin, Lisbon, and Bangkok. Learned to deliver fast across time zones and cultures.',
+  tags:['Remote','Startups','Branding'],conn:['l1','w1']},
+{id:'e1',type:'edu',shape:'square',size:42,x:420,y:500,title:'B.A. Visual Communication',org:'Royal Academy of Design',date:'2013 \u2014 2017',
+  desc:'Specialized in interaction design and typography. Thesis: an interactive hospital wayfinding system that reduced navigation errors by 60% in user testing.',
+  tags:['Interaction Design','Typography','Thesis'],conn:['w3','l3','e2']},
+{id:'e2',type:'edu',shape:'square',size:26,x:220,y:360,title:'High School',org:'Tbilisi International School',date:'2009 \u2014 2013',
+  desc:'First encounter with design through the school magazine. An art teacher suggested visual communication \u2014 that single conversation redirected everything.',
+  tags:['First Spark','Art','Layout'],conn:['e1','l4']},
+{id:'c1',type:'cert',shape:'hexagon',size:32,x:1260,y:360,title:'UX Professional Certificate',org:'Google / Coursera',date:'2020',
+  desc:'Full professional certificate focused on research methodologies and accessibility standards. Validated intuitions built through 3 years of hands-on practice.',
+  tags:['Research Methods','Accessibility','WCAG'],conn:['w2','w1']},
+{id:'c2',type:'cert',shape:'hexagon',size:26,x:880,y:340,title:'Data Visualization',org:'MIT OpenCourseWare',date:'2019',
+  desc:'Self-directed deep dive into data visualization. D3.js, Tufte, grammar of graphics. Directly prepared the ground for the FinFlow dashboard work.',
+  tags:['D3.js','Tufte','Grammar of Graphics'],conn:['w2']},
+{id:'l1',type:'life',shape:'diamond',size:50,x:1700,y:940,title:'1 Year Solo Backpacking',org:'14 Countries \u2014 SE Asia, S. America, E. Europe',date:'2021 \u2014 2022',
+  desc:'A year away from screens taught more about user empathy than any workshop. Navigating foreign booking systems with bad connectivity revealed exactly where travel UX fails. Every frustration became a design insight.',
+  tags:['Empathy','Cross-cultural','Travel Tech','Spanish'],conn:['w1','w4','l2']},
+{id:'l2',type:'life',shape:'diamond',size:30,x:1950,y:760,title:'Return to Tbilisi',org:'Home base, new perspective',date:'2022',
+  desc:'Coming back after a year of travel with completely fresh eyes. The growing tech scene felt different now. Started the local design mentorship chapter. Everything connected.',
+  tags:['Homecoming','Perspective'],conn:['l1','l3','w1']},
+{id:'l3',type:'life',shape:'diamond',size:34,x:520,y:840,title:'Design Mentorship',org:'Design for Good \u2014 Tbilisi',date:'2023 \u2014 Present',
+  desc:'Mentoring junior designers from non-traditional backgrounds. Monthly portfolio reviews and workshops on building design thinking into everyday problem-solving. Giving back what an art teacher once gave me.',
+  tags:['Mentoring','Community','Workshops'],conn:['w3','e1','l4']},
+{id:'l4',type:'life',shape:'diamond',size:24,x:280,y:640,title:'The Art Teacher Moment',org:'A single conversation that changed everything',date:'2012',
+  desc:'"You see layout where others see decoration." One sentence from a high school art teacher that redirected an entire career path from engineering to visual communication.',
+  tags:['Turning Point','Mentorship'],conn:['e2','e1','l3']}
 ];
 
-const COLORS = {
-  work: { main: '#E07A5F', glow: 'rgba(224,122,95,0.3)' },
-  edu: { main: '#81B29A', glow: 'rgba(129,178,154,0.3)' },
-  life: { main: '#F2CC8F', glow: 'rgba(242,204,143,0.3)' },
-  cert: { main: '#A78BFA', glow: 'rgba(167,139,250,0.3)' }
-};
+const $=id=>document.getElementById(id);
+const canvas=$('canvas'),wrap=$('canvasWrap'),svgEl=$('svgLayer'),panelEl=$('panel'),backdrop=$('backdrop'),panelInner=$('panelInner'),hintEl=$('hint'),mm=$('minimap');
+let panX=0,panY=0,zoom=1,dragging=false,dsx,dsy,psx,psy,touched=false,activeId=null;
 
-// ════════════════════════════════════════
-// RENDER
-// ════════════════════════════════════════
-const canvas = document.getElementById('canvas');
-const canvasWrap = document.getElementById('canvasWrap');
-const svg = document.getElementById('connectionsSvg');
-const panel = document.getElementById('detailPanel');
-const panelOverlay = document.getElementById('panelOverlay');
-const panelContent = document.getElementById('panelContent');
-const hint = document.getElementById('hint');
-const minimap = document.getElementById('minimap');
-
-let activeNodeId = null;
-let panX = 0, panY = 0, zoom = 1;
-let isDragging = false, dragStartX, dragStartY, panStartX, panStartY;
-let interacted = false;
-
-// Center canvas initially
-function initView() {
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  panX = -(1500 - vw / 2) * zoom;
-  panY = -(600 - vh / 2) * zoom;
-  applyTransform();
+function init(){
+  const vw=window.innerWidth,vh=window.innerHeight;
+  panX=-(1600-vw/2)*zoom;panY=-(640-vh/2)*zoom;
+  applyTx();drawLines();renderNodes();spawnParticles();initMinimap();
 }
 
-function applyTransform() {
-  canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
-  canvas.style.transformOrigin = '0 0';
-  updateMinimap();
+function applyTx(){
+  canvas.style.transform='translate('+panX+'px,'+panY+'px) scale('+zoom+')';
+  canvas.style.transformOrigin='0 0';updateMM();
 }
 
-// Draw connection lines
-function drawConnections() {
-  svg.innerHTML = '';
-  const drawn = new Set();
-  NODES.forEach(node => {
-    (node.connections || []).forEach(targetId => {
-      const key = [node.id, targetId].sort().join('--');
-      if (drawn.has(key)) return;
-      drawn.add(key);
-      const target = NODES.find(n => n.id === targetId);
-      if (!target) return;
+function drawLines(){
+  const defs=svgEl.querySelector('defs').outerHTML;
+  svgEl.innerHTML=defs;
+  const drawn=new Set();
+  N.forEach(function(n){
+    (n.conn||[]).forEach(function(tid){
+      var k=[n.id,tid].sort().join('-');
+      if(drawn.has(k))return;drawn.add(k);
+      var t=N.find(function(x){return x.id===tid});
+      if(!t)return;
+      var mx=(n.x+t.x)/2,my=(n.y+t.y)/2;
+      var dx=t.x-n.x,dy=t.y-n.y;
+      var cx=mx-dy*0.15,cy=my+dx*0.15;
+      var d='M'+n.x+','+n.y+' Q'+cx+','+cy+' '+t.x+','+t.y;
 
-      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      line.setAttribute('x1', node.x);
-      line.setAttribute('y1', node.y);
-      line.setAttribute('x2', target.x);
-      line.setAttribute('y2', target.y);
-      line.classList.add('conn-line');
-      // Different line style for cross-type connections
-      if (node.type !== target.type) line.classList.add('story');
-      line.dataset.from = node.id;
-      line.dataset.to = targetId;
-      svg.appendChild(line);
+      var p=document.createElementNS('http://www.w3.org/2000/svg','path');
+      p.setAttribute('d',d);p.classList.add('conn-path');
+      if(n.type!==t.type)p.classList.add('cross');
+      p.dataset.from=n.id;p.dataset.to=tid;svgEl.appendChild(p);
+
+      var f=document.createElementNS('http://www.w3.org/2000/svg','path');
+      f.setAttribute('d',d);f.classList.add('conn-flow');
+      f.dataset.from=n.id;f.dataset.to=tid;svgEl.appendChild(f);
     });
   });
 }
 
-// Render nodes
-function renderNodes() {
-  NODES.forEach(node => {
-    const el = document.createElement('div');
-    el.className = 'node';
-    el.id = `node-${node.id}`;
-    el.style.left = `${node.x - node.size / 2}px`;
-    el.style.top = `${node.y - node.size / 2}px`;
+function renderNodes(){
+  N.forEach(function(n,i){
+    var el=document.createElement('div');
+    el.className='node';el.id='n-'+n.id;
+    el.style.left=(n.x-n.size/2)+'px';el.style.top=(n.y-n.size/2)+'px';
+    el.style.animationDelay=(0.3+i*0.06)+'s';
+    var c=C[n.type];
+    var sc={circle:'shape-circle',diamond:'shape-diamond',square:'shape-square',hexagon:'shape-hexagon'}[n.shape];
+    var lbl=n.title.length>30?n.title.slice(0,28)+'\u2026':n.title;
 
-    const color = COLORS[node.type].main;
-    const glow = COLORS[node.type].glow;
+    el.innerHTML='<div class="node-core">'+
+      '<div class="node-glow" style="background:radial-gradient(circle,'+c.glow+',transparent 70%)"></div>'+
+      '<div class="node-orbit" style="border-color:'+c.main+'"><div class="node-orbit-dot" style="background:'+c.main+'"></div></div>'+
+      '<div class="node-shape '+sc+'" style="width:'+n.size+'px;height:'+n.size+'px;background:linear-gradient(135deg,'+c.main+','+c.main+'dd);box-shadow:0 4px 20px '+c.glow+'"></div>'+
+      '</div>'+
+      '<div class="node-label"><span class="node-label-text">'+lbl+'</span><span class="node-label-year">'+n.date+'</span></div>';
 
-    let shapeClass = 'node-dot';
-    if (node.shape === 'diamond') shapeClass = 'node-diamond';
-    if (node.shape === 'square') shapeClass = 'node-square';
-    if (node.shape === 'hex') shapeClass = 'node-hex';
-
-    el.innerHTML = `
-      <div class="node-shape">
-        <div class="${shapeClass}" style="
-          width:${node.size}px;
-          height:${node.size}px;
-          background:${color};
-          --glow:${glow};
-        "></div>
-        <div class="node-ring" style="
-          width:${node.size + 20}px;
-          height:${node.size + 20}px;
-          top:${-10}px;
-          left:${-10}px;
-          border-color:${color};
-          animation-delay:${Math.random() * 3}s;
-        "></div>
-      </div>
-      <div class="node-label">
-        ${node.title.length > 28 ? node.title.slice(0, 26) + '…' : node.title}
-        <span class="node-year">${node.date}</span>
-      </div>
-    `;
-
-    el.addEventListener('click', (e) => {
-      e.stopPropagation();
-      openNode(node.id);
-    });
-
+    el.addEventListener('click',function(e){e.stopPropagation();openNode(n.id)});
     canvas.appendChild(el);
   });
 }
 
-// Open node detail
-function openNode(id) {
-  const node = NODES.find(n => n.id === id);
-  if (!node) return;
+function spawnParticles(){
+  for(var i=0;i<40;i++){
+    var p=document.createElement('div');p.className='particle';
+    var s=1+Math.random()*2;
+    p.style.width=s+'px';p.style.height=s+'px';
+    p.style.left=Math.random()*3200+'px';p.style.top=Math.random()*2200+'px';
+    p.style.animationDuration=(8+Math.random()*12)+'s';
+    p.style.animationDelay=Math.random()*10+'s';
+    canvas.appendChild(p);
+  }
+}
 
-  activeNodeId = id;
-  const color = COLORS[node.type];
-  const typeLabel = { work: 'Work Experience', edu: 'Education', life: 'Life Experience', cert: 'Certification' }[node.type];
+function openNode(id){
+  var n=N.find(function(x){return x.id===id});if(!n)return;
+  activeId=id;var c=C[n.type];
+  var connected=N.filter(function(x){return n.conn.indexOf(x.id)!==-1});
 
-  // Connected nodes
-  const connected = NODES.filter(n => node.connections.includes(n.id));
+  var html='<div class="panel-accent-line" style="background:linear-gradient(to right,'+c.main+',transparent)"></div>'+
+    '<div class="panel-type" style="color:'+c.main+'">'+c.label+'</div>'+
+    '<div class="panel-title">'+n.title+'</div>'+
+    '<div class="panel-org">'+n.org+'</div>'+
+    '<div class="panel-date">'+n.date+'</div>'+
+    '<div class="panel-desc">'+n.desc+'</div>';
 
-  panelContent.innerHTML = `
-    <div class="panel-type" style="color:${color.main}">
-      <div class="panel-type-dot" style="background:${color.main}"></div>
-      ${typeLabel}
-    </div>
-    <div class="panel-title">${node.title}</div>
-    <div class="panel-org">${node.org}</div>
-    <div class="panel-date">${node.date}</div>
-    <div class="panel-desc">${node.desc}</div>
-    ${node.tags ? `<div class="panel-tags">${node.tags.map(t => `<span class="panel-tag">${t}</span>`).join('')}</div>` : ''}
-    ${connected.length ? `
-      <div class="panel-connections-label">Connected to</div>
-      <div class="panel-conn-list">
-        ${connected.map(c => `
-          <div class="panel-conn-item" onclick="openNode('${c.id}')">
-            <div class="panel-conn-dot" style="background:${COLORS[c.type].main}"></div>
-            ${c.title}
-          </div>
-        `).join('')}
-      </div>
-    ` : ''}
-  `;
-
-  panel.style.setProperty('--panel-glow', color.glow);
-
-  // Position panel near viewport center on desktop
-  if (window.innerWidth > 700) {
-    panel.style.top = '50%';
-    panel.style.left = '';
-    panel.style.right = '40px';
-    panel.style.bottom = '';
-    panel.style.transform = 'translateY(-50%) scale(0.96)';
-    requestAnimationFrame(() => {
-      panel.classList.add('visible');
-      panel.style.transform = 'translateY(-50%) scale(1)';
-    });
-  } else {
-    panel.style.top = '';
-    panel.style.left = '0';
-    panel.style.right = '0';
-    panel.style.bottom = '0';
-    requestAnimationFrame(() => panel.classList.add('visible'));
+  if(n.tags){
+    html+='<div class="panel-tags">';
+    n.tags.forEach(function(t){html+='<span class="panel-tag">'+t+'</span>'});
+    html+='</div>';
   }
 
-  panelOverlay.classList.add('visible');
+  if(connected.length){
+    html+='<div class="panel-divider"></div><div class="panel-conn-label">Connected experiences</div>';
+    connected.forEach(function(cn){
+      html+='<div class="panel-conn-item" onclick="openNode(\''+cn.id+'\')">'+
+        '<div class="panel-conn-dot" style="background:'+C[cn.type].main+'"></div>'+
+        '<div><div style="color:#C8C4D4;font-weight:500">'+cn.title+'</div>'+
+        '<div style="font-size:0.7rem;color:#5E5A6B;margin-top:2px">'+cn.org+'</div></div></div>';
+    });
+  }
 
-  // Highlight node and connections
-  document.querySelectorAll('.node').forEach(n => n.classList.remove('active'));
-  document.getElementById(`node-${id}`)?.classList.add('active');
+  panelInner.innerHTML=html;
+  panelEl.style.boxShadow='0 40px 80px rgba(0,0,0,0.6),0 0 120px '+c.glow+',inset 0 1px 0 rgba(255,255,255,0.05)';
 
-  document.querySelectorAll('.conn-line').forEach(l => {
-    l.classList.remove('highlighted');
-    if (l.dataset.from === id || l.dataset.to === id) {
-      l.classList.add('highlighted');
-    }
+  if(window.innerWidth>700){
+    panelEl.style.top='50%';panelEl.style.right='40px';panelEl.style.left='auto';panelEl.style.bottom='auto';
+    panelEl.style.transform='translateY(-50%) scale(0.95)';
+    requestAnimationFrame(function(){panelEl.classList.add('visible');panelEl.style.transform='translateY(-50%) scale(1)'});
+  } else {
+    panelEl.style.top='auto';panelEl.style.right='0';panelEl.style.left='0';panelEl.style.bottom='0';
+    requestAnimationFrame(function(){panelEl.classList.add('visible')});
+  }
+  backdrop.classList.add('visible');
+
+  document.querySelectorAll('.node').forEach(function(x){x.classList.remove('active')});
+  var activeNode=document.getElementById('n-'+id);if(activeNode)activeNode.classList.add('active');
+  document.querySelectorAll('.conn-path,.conn-flow').forEach(function(l){
+    var h=(l.dataset.from===id||l.dataset.to===id);
+    if(h)l.classList.add('highlighted');else l.classList.remove('highlighted');
   });
 }
 
-function closePanel() {
-  panel.classList.remove('visible');
-  panelOverlay.classList.remove('visible');
-  document.querySelectorAll('.node').forEach(n => n.classList.remove('active'));
-  document.querySelectorAll('.conn-line').forEach(l => l.classList.remove('highlighted'));
-  activeNodeId = null;
+function closePanel(){
+  panelEl.classList.remove('visible');backdrop.classList.remove('visible');
+  document.querySelectorAll('.node').forEach(function(x){x.classList.remove('active')});
+  document.querySelectorAll('.conn-path,.conn-flow').forEach(function(l){l.classList.remove('highlighted')});
+  activeId=null;
 }
 
-// ════════════════════════════════════════
-// PAN & ZOOM
-// ════════════════════════════════════════
-canvasWrap.addEventListener('mousedown', (e) => {
-  if (e.target.closest('.node')) return;
-  isDragging = true;
-  dragStartX = e.clientX;
-  dragStartY = e.clientY;
-  panStartX = panX;
-  panStartY = panY;
-  canvasWrap.classList.add('dragging');
-  if (!interacted) { hint.classList.add('hidden'); interacted = true; }
+// PAN / ZOOM
+wrap.addEventListener('mousedown',function(e){
+  if(e.target.closest('.node'))return;
+  dragging=true;dsx=e.clientX;dsy=e.clientY;psx=panX;psy=panY;
+  wrap.classList.add('dragging');hideHint();
 });
+window.addEventListener('mousemove',function(e){if(!dragging)return;panX=psx+(e.clientX-dsx);panY=psy+(e.clientY-dsy);applyTx()});
+window.addEventListener('mouseup',function(){dragging=false;wrap.classList.remove('dragging')});
 
-window.addEventListener('mousemove', (e) => {
-  if (!isDragging) return;
-  panX = panStartX + (e.clientX - dragStartX);
-  panY = panStartY + (e.clientY - dragStartY);
-  applyTransform();
-});
+var tsx,tsy,tpx,tpy;
+wrap.addEventListener('touchstart',function(e){
+  if(e.target.closest('.node')||e.touches.length!==1)return;
+  tsx=e.touches[0].clientX;tsy=e.touches[0].clientY;tpx=panX;tpy=panY;hideHint();
+},{passive:true});
+wrap.addEventListener('touchmove',function(e){
+  if(e.touches.length!==1)return;
+  panX=tpx+(e.touches[0].clientX-tsx);panY=tpy+(e.touches[0].clientY-tsy);applyTx();
+},{passive:true});
 
-window.addEventListener('mouseup', () => {
-  isDragging = false;
-  canvasWrap.classList.remove('dragging');
-});
-
-// Touch events
-let touchStartX, touchStartY, touchPanStartX, touchPanStartY;
-canvasWrap.addEventListener('touchstart', (e) => {
-  if (e.target.closest('.node') || e.touches.length !== 1) return;
-  touchStartX = e.touches[0].clientX;
-  touchStartY = e.touches[0].clientY;
-  touchPanStartX = panX;
-  touchPanStartY = panY;
-  if (!interacted) { hint.classList.add('hidden'); interacted = true; }
-}, { passive: true });
-
-canvasWrap.addEventListener('touchmove', (e) => {
-  if (e.touches.length !== 1) return;
-  panX = touchPanStartX + (e.touches[0].clientX - touchStartX);
-  panY = touchPanStartY + (e.touches[0].clientY - touchStartY);
-  applyTransform();
-}, { passive: true });
-
-// Zoom with scroll
-canvasWrap.addEventListener('wheel', (e) => {
+wrap.addEventListener('wheel',function(e){
   e.preventDefault();
-  const delta = e.deltaY > 0 ? -0.06 : 0.06;
-  const newZoom = Math.min(2, Math.max(0.4, zoom + delta));
-  
-  // Zoom toward cursor
-  const rect = canvasWrap.getBoundingClientRect();
-  const mx = e.clientX - rect.left;
-  const my = e.clientY - rect.top;
-  
-  const wx = (mx - panX) / zoom;
-  const wy = (my - panY) / zoom;
-  
-  zoom = newZoom;
-  panX = mx - wx * zoom;
-  panY = my - wy * zoom;
-  
-  applyTransform();
-  if (!interacted) { hint.classList.add('hidden'); interacted = true; }
-}, { passive: false });
+  var d=e.deltaY>0?-0.06:0.06;
+  var nz=Math.min(2.2,Math.max(0.35,zoom+d));
+  var r=wrap.getBoundingClientRect();
+  var mx=e.clientX-r.left,my=e.clientY-r.top;
+  var wx=(mx-panX)/zoom,wy=(my-panY)/zoom;
+  zoom=nz;panX=mx-wx*zoom;panY=my-wy*zoom;
+  applyTx();hideHint();
+},{passive:false});
 
-function resetView() {
-  zoom = 1;
-  initView();
-  closePanel();
-}
+function resetView(){zoom=1;var vw=window.innerWidth,vh=window.innerHeight;panX=-(1600-vw/2);panY=-(640-vh/2);applyTx();closePanel()}
+function hideHint(){if(!touched){touched=true;hintEl.classList.add('hidden')}}
 
-// ════════════════════════════════════════
-// MINIMAP
-// ════════════════════════════════════════
-function renderMinimap() {
-  const mmW = 160, mmH = 107;
-  const cW = 3000, cH = 2000;
-  const sx = mmW / cW, sy = mmH / cH;
-
-  NODES.forEach(node => {
-    const d = document.createElement('div');
-    d.className = 'minimap-dot';
-    d.style.left = `${node.x * sx - 2}px`;
-    d.style.top = `${node.y * sy - 2}px`;
-    d.style.background = COLORS[node.type].main;
-    minimap.appendChild(d);
+function initMinimap(){
+  var sx=160/3200,sy=110/2200;
+  N.forEach(function(n){
+    var d=document.createElement('div');d.className='minimap-dot';
+    d.style.width='4px';d.style.height='4px';
+    d.style.left=(n.x*sx-2)+'px';d.style.top=(n.y*sy-2)+'px';
+    d.style.background=C[n.type].main;d.style.boxShadow='0 0 4px '+C[n.type].glow;
+    mm.appendChild(d);
   });
-
-  const vp = document.createElement('div');
-  vp.className = 'minimap-viewport';
-  vp.id = 'minimapViewport';
-  minimap.appendChild(vp);
+  var vp=document.createElement('div');vp.className='minimap-viewport';vp.id='mmvp';mm.appendChild(vp);
 }
 
-function updateMinimap() {
-  const vp = document.getElementById('minimapViewport');
-  if (!vp) return;
-  const mmW = 160, mmH = 107;
-  const cW = 3000, cH = 2000;
-  const sx = mmW / cW, sy = mmH / cH;
-
-  const vw = window.innerWidth / zoom;
-  const vh = window.innerHeight / zoom;
-  const ox = -panX / zoom;
-  const oy = -panY / zoom;
-
-  vp.style.left = `${ox * sx}px`;
-  vp.style.top = `${oy * sy}px`;
-  vp.style.width = `${vw * sx}px`;
-  vp.style.height = `${vh * sy}px`;
+function updateMM(){
+  var vp=document.getElementById('mmvp');if(!vp)return;
+  var sx=160/3200,sy=110/2200;
+  var vw=window.innerWidth/zoom,vh=window.innerHeight/zoom;
+  var ox=-panX/zoom,oy=-panY/zoom;
+  vp.style.left=(ox*sx)+'px';vp.style.top=(oy*sy)+'px';
+  vp.style.width=(vw*sx)+'px';vp.style.height=(vh*sy)+'px';
 }
 
-minimap.addEventListener('click', (e) => {
-  const rect = minimap.getBoundingClientRect();
-  const mx = e.clientX - rect.left;
-  const my = e.clientY - rect.top;
-  const cW = 3000, cH = 2000;
-  const targetX = (mx / 160) * cW;
-  const targetY = (my / 107) * cH;
-  panX = -(targetX * zoom - window.innerWidth / 2);
-  panY = -(targetY * zoom - window.innerHeight / 2);
-  applyTransform();
+mm.addEventListener('click',function(e){
+  var r=mm.getBoundingClientRect();
+  var tx=((e.clientX-r.left)/160)*3200,ty=((e.clientY-r.top)/110)*2200;
+  panX=-(tx*zoom-window.innerWidth/2);panY=-(ty*zoom-window.innerHeight/2);applyTx();
 });
 
-// About panel
-function toggleAll() {
-  alert("Life Map -- An interactive career visualization.\n\nEach shape represents an experience:\n- Circle = Work\n- Square = Education\n- Diamond = Life\n- Hex = Certification\n\nLines show how experiences connect.\nDashed lines cross categories.\n\nDrag to explore. Scroll to zoom. Click any node.");
-}
-
-// ════════════════════════════════════════
-// INIT
-// ════════════════════════════════════════
-drawConnections();
-renderNodes();
-renderMinimap();
-initView();
-window.addEventListener('resize', () => { updateMinimap(); });
+window.addEventListener('resize',updateMM);
+init();
 </script>
-
 </body>
 </html>
