@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Map — Interactive CV</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Outfit:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0C0B0F;
+  --bg-surface: #16151A;
+  --bg-panel: #1E1D23;
+  --text: #E8E4DF;
+  --text-muted: #8A8490;
+  --text-dim: #5A5660;
+  --accent-work: #E07A5F;
+  --accent-edu: #81B29A;
+  --accent-life: #F2CC8F;
+  --accent-cert: #A78BFA;
+  --line-color: rgba(255,255,255,0.06);
+  --line-active: rgba(255,255,255,0.2);
+  --glow-work: rgba(224,122,95,0.3);
+  --glow-edu: rgba(129,178,154,0.3);
+  --glow-life: rgba(242,204,143,0.3);
+  --glow-cert: rgba(167,139,250,0.3);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; overflow:hidden; }
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── CANVAS AREA ── */
+.canvas-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  cursor: grab;
+}
+.canvas-wrap.dragging { cursor: grabbing; }
+
+.canvas {
+  position: absolute;
+  width: 3000px;
+  height: 2000px;
+  top: 0;
+  left: 0;
+  will-change: transform;
+}
+
+/* ── SVG CONNECTIONS ── */
+.connections-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.conn-line {
+  stroke: var(--line-color);
+  stroke-width: 1.2;
+  fill: none;
+  transition: stroke 0.4s ease, stroke-width 0.4s ease;
+}
+
+.conn-line.highlighted {
+  stroke: var(--line-active);
+  stroke-width: 2;
+}
+
+.conn-line.story {
+  stroke-dasharray: 6 4;
+}
+
+/* ── NODES ── */
+.node {
+  position: absolute;
+  z-index: 10;
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+
+.node:hover { transform: scale(1.08); }
+.node.active { transform: scale(1.12); z-index: 20; }
+
+.node-shape {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.node-dot {
+  border-radius: 50%;
+  transition: box-shadow 0.4s ease;
+}
+
+.node-diamond {
+  transform: rotate(45deg);
+  border-radius: 4px;
+  transition: box-shadow 0.4s ease;
+}
+
+.node-square {
+  border-radius: 6px;
+  transition: box-shadow 0.4s ease;
+}
+
+.node-hex {
+  border-radius: 50%;
+  transition: box-shadow 0.4s ease;
+}
+
+.node.active .node-dot,
+.node.active .node-diamond,
+.node.active .node-square,
+.node.active .node-hex {
+  box-shadow: 0 0 30px var(--glow), 0 0 60px var(--glow);
+}
+
+.node-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid;
+  opacity: 0;
+  animation: pulse-ring 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes pulse-ring {
+  0%, 100% { transform: scale(1); opacity: 0; }
+  50% { transform: scale(1.8); opacity: 0.15; }
+}
+
+.node-label {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  text-align: center;
+  pointer-events: none;
+  opacity: 0.7;
+  transition: opacity 0.3s ease, color 0.3s ease;
+}
+
+.node:hover .node-label,
+.node.active .node-label {
+  opacity: 1;
+  color: var(--text);
+}
+
+.node-year {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: var(--text-dim);
+  display: block;
+  margin-top: 2px;
+}
+
+/* ── DETAIL PANEL ── */
+.panel-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 90;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.panel-overlay.visible {
+  pointer-events: auto;
+  opacity: 1;
+}
+
+.detail-panel {
+  position: fixed;
+  z-index: 100;
+  width: 380px;
+  max-width: calc(100vw - 32px);
+  max-height: 70vh;
+  background: var(--bg-panel);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 28px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 80px var(--panel-glow, rgba(0,0,0,0));
+  opacity: 0;
+  transform: translateY(12px) scale(0.96);
+  transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.4,0,0.2,1);
+  pointer-events: none;
+  overflow-y: auto;
+}
+
+.detail-panel.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.panel-type {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-weight: 500;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.panel-type-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.panel-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.6rem;
+  font-weight: 400;
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+
+.panel-org {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  font-weight: 300;
+  margin-bottom: 6px;
+}
+
+.panel-date {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+}
+
+.panel-desc {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  font-weight: 300;
+  line-height: 1.75;
+  margin-bottom: 16px;
+}
+
+.panel-connections-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+
+.panel-conn-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.panel-conn-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.panel-conn-item:hover {
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+}
+
+.panel-conn-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.panel-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.panel-tag {
+  padding: 4px 10px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  border-radius: 100px;
+  background: rgba(255,255,255,0.05);
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
+.panel-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transition: background 0.2s ease;
+}
+
+.panel-close:hover {
+  background: rgba(255,255,255,0.12);
+  color: var(--text);
+}
+
+.panel-close svg { width: 14px; height: 14px; }
+
+/* ── LEGEND ── */
+.legend {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 80;
+  display: flex;
+  gap: 20px;
+  padding: 14px 20px;
+  background: rgba(22,21,26,0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.legend-shape {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+}
+
+.legend-circle { border-radius: 50%; }
+.legend-diamond { transform: rotate(45deg); border-radius: 2px; }
+.legend-square { border-radius: 2px; }
+.legend-hex { border-radius: 50%; }
+
+/* ── TOP BAR ── */
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 80;
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  pointer-events: none;
+}
+
+.topbar > * { pointer-events: auto; }
+
+.topbar-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.15rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+.topbar-subtitle {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  font-weight: 300;
+  margin-top: 1px;
+}
+
+.topbar-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.topbar-btn {
+  padding: 8px 16px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 100px;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 400;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.topbar-btn:hover {
+  background: rgba(255,255,255,0.1);
+  color: var(--text);
+}
+
+.topbar-btn svg { width: 14px; height: 14px; }
+
+/* ── HINT ── */
+.hint {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  z-index: 70;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 1s ease;
+  text-align: center;
+}
+
+.hint.hidden { opacity: 0; }
+
+.hint-icon {
+  display: block;
+  margin: 0 auto 8px;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--text-dim);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── GRAIN OVERLAY ── */
+.grain {
+  position: fixed;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  z-index: 200;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+/* ── MINIMAP ── */
+.minimap {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 160px;
+  height: 107px;
+  background: rgba(22,21,26,0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+  z-index: 80;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.minimap-viewport {
+  position: absolute;
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 2px;
+  background: rgba(255,255,255,0.04);
+  pointer-events: none;
+  transition: left 0.1s, top 0.1s, width 0.1s, height 0.1s;
+}
+
+.minimap-dot {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 700px) {
+  .legend { 
+    bottom: 12px; left: 12px; right: 12px;
+    justify-content: center;
+    gap: 14px;
+    padding: 10px 14px;
+  }
+  .minimap { display: none; }
+  .topbar { padding: 14px 16px; }
+  .detail-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto;
+    width: 100%;
+    max-width: 100%;
+    max-height: 60vh;
+    border-radius: 20px 20px 0 0;
+    transform: translateY(20px);
+  }
+  .detail-panel.visible {
+    transform: translateY(0);
+  }
+}
+
+/* ── FADE IN ── */
+@keyframes canvasFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.canvas { animation: canvasFadeIn 1s ease both; }
+</style>
+</head>
+<body>
+
+<div class="grain"></div>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div>
+    <div class="topbar-title">Alex Morgan</div>
+    <div class="topbar-subtitle">Life-Career Map</div>
+  </div>
+  <div class="topbar-actions">
+    <button class="topbar-btn" onclick="resetView()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+      Reset
+    </button>
+    <button class="topbar-btn" onclick="toggleAll()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      About
+    </button>
+  </div>
+</div>
+
+<!-- HINT -->
+<div class="hint" id="hint">
+  <div class="hint-icon">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 9l4 4L19 3"/></svg>
+  </div>
+  Drag to explore · Click nodes to reveal
+</div>
+
+<!-- CANVAS -->
+<div class="canvas-wrap" id="canvasWrap">
+  <div class="canvas" id="canvas">
+    <svg class="connections-svg" id="connectionsSvg"></svg>
+  </div>
+</div>
+
+<!-- DETAIL PANEL -->
+<div class="panel-overlay" id="panelOverlay" onclick="closePanel()"></div>
+<div class="detail-panel" id="detailPanel">
+  <button class="panel-close" onclick="closePanel()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+  </button>
+  <div id="panelContent"></div>
+</div>
+
+<!-- LEGEND -->
+<div class="legend">
+  <div class="legend-item">
+    <div class="legend-shape legend-circle" style="background:var(--accent-work)"></div>
+    Work
+  </div>
+  <div class="legend-item">
+    <div class="legend-shape legend-square" style="background:var(--accent-edu)"></div>
+    Education
+  </div>
+  <div class="legend-item">
+    <div class="legend-shape legend-diamond" style="background:var(--accent-life)"></div>
+    Life
+  </div>
+  <div class="legend-item">
+    <div class="legend-shape legend-hex" style="background:var(--accent-cert)"></div>
+    Certification
+  </div>
+</div>
+
+<!-- MINIMAP -->
+<div class="minimap" id="minimap"></div>
+
+<script>
+// ════════════════════════════════════════
+// DATA — Each node is an experience
+// ════════════════════════════════════════
+const NODES = [
+  {
+    id: 'work-wanderlust',
+    type: 'work',
+    shape: 'dot',
+    size: 48,
+    x: 1500, y: 600,
+    title: 'Senior Product Designer',
+    org: 'Wanderlust Travel',
+    date: '2022 — Present',
+    desc: 'Redesigned the entire booking funnel, increasing conversion by 23%. Led 3 designers through a design system overhaul. Solo travel experience directly shaped the mobile-first search rethink.',
+    tags: ['Figma', 'Design Systems', 'User Research', 'A/B Testing'],
+    connections: ['life-solo-travel', 'work-finflow', 'cert-ux']
+  },
+  {
+    id: 'work-finflow',
+    type: 'work',
+    shape: 'dot',
+    size: 40,
+    x: 1050, y: 520,
+    title: 'Product Designer',
+    org: 'FinFlow',
+    date: '2019 — 2022',
+    desc: 'Owned the dashboard experience for 50k+ users. Data visualization patterns reduced support tickets by 40%. Deep collaboration with engineering on component architecture.',
+    tags: ['Dashboard Design', 'Data Viz', 'React', 'Prototyping'],
+    connections: ['edu-ba', 'work-eduspark', 'cert-ux']
+  },
+  {
+    id: 'work-eduspark',
+    type: 'work',
+    shape: 'dot',
+    size: 34,
+    x: 650, y: 680,
+    title: 'UX Designer',
+    org: 'EduSpark',
+    date: '2017 — 2019',
+    desc: 'Designed learning interfaces for K-12 platforms. Discovered that problem-solving skills in children are deeply influenced by how interfaces scaffold complexity — a career-defining insight.',
+    tags: ['EdTech', 'Accessibility', 'User Testing'],
+    connections: ['edu-ba', 'life-mentor']
+  },
+  {
+    id: 'work-freelance',
+    type: 'work',
+    shape: 'dot',
+    size: 26,
+    x: 1280, y: 880,
+    title: 'Freelance Designer',
+    org: 'Various Clients',
+    date: '2021 — 2022',
+    desc: 'Took on freelance projects while traveling. Worked remotely with startups in Berlin, Lisbon, and Bangkok. Learned to ship fast across time zones and cultures.',
+    tags: ['Remote Work', 'Startups', 'Branding'],
+    connections: ['life-solo-travel', 'work-wanderlust']
+  },
+  {
+    id: 'edu-ba',
+    type: 'edu',
+    shape: 'square',
+    size: 38,
+    x: 400, y: 480,
+    title: 'B.A. Visual Communication',
+    org: 'Royal Academy of Design',
+    date: '2013 — 2017',
+    desc: 'Specialized in interaction design and typography. Thesis: an interactive wayfinding system for hospitals that reduced navigation errors by 60% in user testing.',
+    tags: ['Interaction Design', 'Typography', 'Thesis'],
+    connections: ['work-eduspark', 'life-mentor', 'edu-highschool']
+  },
+  {
+    id: 'edu-highschool',
+    type: 'edu',
+    shape: 'square',
+    size: 24,
+    x: 200, y: 350,
+    title: 'High School',
+    org: 'Tbilisi International School',
+    date: '2009 — 2013',
+    desc: 'First encounter with design through the school magazine layout. Art teacher suggested pursuing visual communication — that single conversation set the trajectory.',
+    tags: ['First Spark', 'Art', 'Layout'],
+    connections: ['edu-ba', 'life-art-teacher']
+  },
+  {
+    id: 'cert-ux',
+    type: 'cert',
+    shape: 'hex',
+    size: 28,
+    x: 1200, y: 350,
+    title: 'UX Professional Certificate',
+    org: 'Google / Coursera',
+    date: '2020',
+    desc: 'Completed the full professional certificate. Focused on research methodologies and accessibility standards. Validated intuitions built through 3 years of practice.',
+    tags: ['Research Methods', 'Accessibility', 'WCAG'],
+    connections: ['work-finflow', 'work-wanderlust']
+  },
+  {
+    id: 'cert-data',
+    type: 'cert',
+    shape: 'hex',
+    size: 22,
+    x: 850, y: 320,
+    title: 'Data Visualization',
+    org: 'MIT OpenCourseWare',
+    date: '2019',
+    desc: 'Self-directed deep dive into data visualization principles. D3.js, Tufte, and the grammar of graphics. This directly prepared me for the FinFlow dashboard work.',
+    tags: ['D3.js', 'Tufte', 'Grammar of Graphics'],
+    connections: ['work-finflow']
+  },
+  {
+    id: 'life-solo-travel',
+    type: 'life',
+    shape: 'diamond',
+    size: 44,
+    x: 1600, y: 900,
+    title: '1 Year Solo Backpacking',
+    org: '14 Countries — SE Asia, S. America, E. Europe',
+    date: '2021 — 2022',
+    desc: 'A year away from screens taught me more about user empathy than any workshop. Navigating foreign booking systems with bad connectivity revealed exactly where travel UX fails. Every frustration became a design insight. Became conversational in Spanish.',
+    tags: ['Empathy', 'Cross-cultural', 'Travel Tech Insights', 'Spanish'],
+    connections: ['work-wanderlust', 'work-freelance', 'life-tbilisi']
+  },
+  {
+    id: 'life-mentor',
+    type: 'life',
+    shape: 'diamond',
+    size: 30,
+    x: 500, y: 800,
+    title: 'Design Mentorship',
+    org: 'Design for Good — Tbilisi Chapter',
+    date: '2023 — Present',
+    desc: 'Mentoring junior designers from non-traditional backgrounds. Monthly portfolio reviews and workshops on design thinking. Giving back what my art teacher gave me — direction.',
+    tags: ['Mentoring', 'Community', 'Workshops'],
+    connections: ['work-eduspark', 'edu-ba', 'life-art-teacher']
+  },
+  {
+    id: 'life-art-teacher',
+    type: 'life',
+    shape: 'diamond',
+    size: 22,
+    x: 250, y: 620,
+    title: 'The Art Teacher Conversation',
+    org: 'A single conversation that changed everything',
+    date: '2012',
+    desc: '"You see layout where others see decoration." That one sentence from my high school art teacher redirected my entire career path from engineering to visual communication.',
+    tags: ['Turning Point', 'Mentorship'],
+    connections: ['edu-highschool', 'edu-ba', 'life-mentor']
+  },
+  {
+    id: 'life-tbilisi',
+    type: 'life',
+    shape: 'diamond',
+    size: 26,
+    x: 1850, y: 750,
+    title: 'Return to Tbilisi',
+    org: 'Home base, new perspective',
+    date: '2022',
+    desc: 'Coming home after a year of travel with fresh eyes. Tbilisi\'s growing tech scene felt different now. Started the local design mentorship chapter. Everything connected.',
+    tags: ['Homecoming', 'Perspective'],
+    connections: ['life-solo-travel', 'life-mentor', 'work-wanderlust']
+  }
+];
+
+const COLORS = {
+  work: { main: '#E07A5F', glow: 'rgba(224,122,95,0.3)' },
+  edu: { main: '#81B29A', glow: 'rgba(129,178,154,0.3)' },
+  life: { main: '#F2CC8F', glow: 'rgba(242,204,143,0.3)' },
+  cert: { main: '#A78BFA', glow: 'rgba(167,139,250,0.3)' }
+};
+
+// ════════════════════════════════════════
+// RENDER
+// ════════════════════════════════════════
+const canvas = document.getElementById('canvas');
+const canvasWrap = document.getElementById('canvasWrap');
+const svg = document.getElementById('connectionsSvg');
+const panel = document.getElementById('detailPanel');
+const panelOverlay = document.getElementById('panelOverlay');
+const panelContent = document.getElementById('panelContent');
+const hint = document.getElementById('hint');
+const minimap = document.getElementById('minimap');
+
+let activeNodeId = null;
+let panX = 0, panY = 0, zoom = 1;
+let isDragging = false, dragStartX, dragStartY, panStartX, panStartY;
+let interacted = false;
+
+// Center canvas initially
+function initView() {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  panX = -(1500 - vw / 2) * zoom;
+  panY = -(600 - vh / 2) * zoom;
+  applyTransform();
+}
+
+function applyTransform() {
+  canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
+  canvas.style.transformOrigin = '0 0';
+  updateMinimap();
+}
+
+// Draw connection lines
+function drawConnections() {
+  svg.innerHTML = '';
+  const drawn = new Set();
+  NODES.forEach(node => {
+    (node.connections || []).forEach(targetId => {
+      const key = [node.id, targetId].sort().join('--');
+      if (drawn.has(key)) return;
+      drawn.add(key);
+      const target = NODES.find(n => n.id === targetId);
+      if (!target) return;
+
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', node.x);
+      line.setAttribute('y1', node.y);
+      line.setAttribute('x2', target.x);
+      line.setAttribute('y2', target.y);
+      line.classList.add('conn-line');
+      // Different line style for cross-type connections
+      if (node.type !== target.type) line.classList.add('story');
+      line.dataset.from = node.id;
+      line.dataset.to = targetId;
+      svg.appendChild(line);
+    });
+  });
+}
+
+// Render nodes
+function renderNodes() {
+  NODES.forEach(node => {
+    const el = document.createElement('div');
+    el.className = 'node';
+    el.id = `node-${node.id}`;
+    el.style.left = `${node.x - node.size / 2}px`;
+    el.style.top = `${node.y - node.size / 2}px`;
+
+    const color = COLORS[node.type].main;
+    const glow = COLORS[node.type].glow;
+
+    let shapeClass = 'node-dot';
+    if (node.shape === 'diamond') shapeClass = 'node-diamond';
+    if (node.shape === 'square') shapeClass = 'node-square';
+    if (node.shape === 'hex') shapeClass = 'node-hex';
+
+    el.innerHTML = `
+      <div class="node-shape">
+        <div class="${shapeClass}" style="
+          width:${node.size}px;
+          height:${node.size}px;
+          background:${color};
+          --glow:${glow};
+        "></div>
+        <div class="node-ring" style="
+          width:${node.size + 20}px;
+          height:${node.size + 20}px;
+          top:${-10}px;
+          left:${-10}px;
+          border-color:${color};
+          animation-delay:${Math.random() * 3}s;
+        "></div>
+      </div>
+      <div class="node-label">
+        ${node.title.length > 28 ? node.title.slice(0, 26) + '…' : node.title}
+        <span class="node-year">${node.date}</span>
+      </div>
+    `;
+
+    el.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openNode(node.id);
+    });
+
+    canvas.appendChild(el);
+  });
+}
+
+// Open node detail
+function openNode(id) {
+  const node = NODES.find(n => n.id === id);
+  if (!node) return;
+
+  activeNodeId = id;
+  const color = COLORS[node.type];
+  const typeLabel = { work: 'Work Experience', edu: 'Education', life: 'Life Experience', cert: 'Certification' }[node.type];
+
+  // Connected nodes
+  const connected = NODES.filter(n => node.connections.includes(n.id));
+
+  panelContent.innerHTML = `
+    <div class="panel-type" style="color:${color.main}">
+      <div class="panel-type-dot" style="background:${color.main}"></div>
+      ${typeLabel}
+    </div>
+    <div class="panel-title">${node.title}</div>
+    <div class="panel-org">${node.org}</div>
+    <div class="panel-date">${node.date}</div>
+    <div class="panel-desc">${node.desc}</div>
+    ${node.tags ? `<div class="panel-tags">${node.tags.map(t => `<span class="panel-tag">${t}</span>`).join('')}</div>` : ''}
+    ${connected.length ? `
+      <div class="panel-connections-label">Connected to</div>
+      <div class="panel-conn-list">
+        ${connected.map(c => `
+          <div class="panel-conn-item" onclick="openNode('${c.id}')">
+            <div class="panel-conn-dot" style="background:${COLORS[c.type].main}"></div>
+            ${c.title}
+          </div>
+        `).join('')}
+      </div>
+    ` : ''}
+  `;
+
+  panel.style.setProperty('--panel-glow', color.glow);
+
+  // Position panel near viewport center on desktop
+  if (window.innerWidth > 700) {
+    panel.style.top = '50%';
+    panel.style.left = '';
+    panel.style.right = '40px';
+    panel.style.bottom = '';
+    panel.style.transform = 'translateY(-50%) scale(0.96)';
+    requestAnimationFrame(() => {
+      panel.classList.add('visible');
+      panel.style.transform = 'translateY(-50%) scale(1)';
+    });
+  } else {
+    panel.style.top = '';
+    panel.style.left = '0';
+    panel.style.right = '0';
+    panel.style.bottom = '0';
+    requestAnimationFrame(() => panel.classList.add('visible'));
+  }
+
+  panelOverlay.classList.add('visible');
+
+  // Highlight node and connections
+  document.querySelectorAll('.node').forEach(n => n.classList.remove('active'));
+  document.getElementById(`node-${id}`)?.classList.add('active');
+
+  document.querySelectorAll('.conn-line').forEach(l => {
+    l.classList.remove('highlighted');
+    if (l.dataset.from === id || l.dataset.to === id) {
+      l.classList.add('highlighted');
+    }
+  });
+}
+
+function closePanel() {
+  panel.classList.remove('visible');
+  panelOverlay.classList.remove('visible');
+  document.querySelectorAll('.node').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.conn-line').forEach(l => l.classList.remove('highlighted'));
+  activeNodeId = null;
+}
+
+// ════════════════════════════════════════
+// PAN & ZOOM
+// ════════════════════════════════════════
+canvasWrap.addEventListener('mousedown', (e) => {
+  if (e.target.closest('.node')) return;
+  isDragging = true;
+  dragStartX = e.clientX;
+  dragStartY = e.clientY;
+  panStartX = panX;
+  panStartY = panY;
+  canvasWrap.classList.add('dragging');
+  if (!interacted) { hint.classList.add('hidden'); interacted = true; }
+});
+
+window.addEventListener('mousemove', (e) => {
+  if (!isDragging) return;
+  panX = panStartX + (e.clientX - dragStartX);
+  panY = panStartY + (e.clientY - dragStartY);
+  applyTransform();
+});
+
+window.addEventListener('mouseup', () => {
+  isDragging = false;
+  canvasWrap.classList.remove('dragging');
+});
+
+// Touch events
+let touchStartX, touchStartY, touchPanStartX, touchPanStartY;
+canvasWrap.addEventListener('touchstart', (e) => {
+  if (e.target.closest('.node') || e.touches.length !== 1) return;
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+  touchPanStartX = panX;
+  touchPanStartY = panY;
+  if (!interacted) { hint.classList.add('hidden'); interacted = true; }
+}, { passive: true });
+
+canvasWrap.addEventListener('touchmove', (e) => {
+  if (e.touches.length !== 1) return;
+  panX = touchPanStartX + (e.touches[0].clientX - touchStartX);
+  panY = touchPanStartY + (e.touches[0].clientY - touchStartY);
+  applyTransform();
+}, { passive: true });
+
+// Zoom with scroll
+canvasWrap.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const delta = e.deltaY > 0 ? -0.06 : 0.06;
+  const newZoom = Math.min(2, Math.max(0.4, zoom + delta));
+  
+  // Zoom toward cursor
+  const rect = canvasWrap.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  
+  const wx = (mx - panX) / zoom;
+  const wy = (my - panY) / zoom;
+  
+  zoom = newZoom;
+  panX = mx - wx * zoom;
+  panY = my - wy * zoom;
+  
+  applyTransform();
+  if (!interacted) { hint.classList.add('hidden'); interacted = true; }
+}, { passive: false });
+
+function resetView() {
+  zoom = 1;
+  initView();
+  closePanel();
+}
+
+// ════════════════════════════════════════
+// MINIMAP
+// ════════════════════════════════════════
+function renderMinimap() {
+  const mmW = 160, mmH = 107;
+  const cW = 3000, cH = 2000;
+  const sx = mmW / cW, sy = mmH / cH;
+
+  NODES.forEach(node => {
+    const d = document.createElement('div');
+    d.className = 'minimap-dot';
+    d.style.left = `${node.x * sx - 2}px`;
+    d.style.top = `${node.y * sy - 2}px`;
+    d.style.background = COLORS[node.type].main;
+    minimap.appendChild(d);
+  });
+
+  const vp = document.createElement('div');
+  vp.className = 'minimap-viewport';
+  vp.id = 'minimapViewport';
+  minimap.appendChild(vp);
+}
+
+function updateMinimap() {
+  const vp = document.getElementById('minimapViewport');
+  if (!vp) return;
+  const mmW = 160, mmH = 107;
+  const cW = 3000, cH = 2000;
+  const sx = mmW / cW, sy = mmH / cH;
+
+  const vw = window.innerWidth / zoom;
+  const vh = window.innerHeight / zoom;
+  const ox = -panX / zoom;
+  const oy = -panY / zoom;
+
+  vp.style.left = `${ox * sx}px`;
+  vp.style.top = `${oy * sy}px`;
+  vp.style.width = `${vw * sx}px`;
+  vp.style.height = `${vh * sy}px`;
+}
+
+minimap.addEventListener('click', (e) => {
+  const rect = minimap.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  const cW = 3000, cH = 2000;
+  const targetX = (mx / 160) * cW;
+  const targetY = (my / 107) * cH;
+  panX = -(targetX * zoom - window.innerWidth / 2);
+  panY = -(targetY * zoom - window.innerHeight / 2);
+  applyTransform();
+});
+
+// About panel
+function toggleAll() {
+  alert("Life Map -- An interactive career visualization.\n\nEach shape represents an experience:\n- Circle = Work\n- Square = Education\n- Diamond = Life\n- Hex = Certification\n\nLines show how experiences connect.\nDashed lines cross categories.\n\nDrag to explore. Scroll to zoom. Click any node.");
+}
+
+// ════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════
+drawConnections();
+renderNodes();
+renderMinimap();
+initView();
+window.addEventListener('resize', () => { updateMinimap(); });
+</script>
+
+</body>
+</html>
