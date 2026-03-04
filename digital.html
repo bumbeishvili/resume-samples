@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interactive CV</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F5F0EB;
+    --bg-card: #FFFCF8;
+    --text: #1A1A1A;
+    --text-muted: #6B6560;
+    --accent: #C45D3E;
+    --accent-hover: #A8402A;
+    --border: #DDD5CC;
+    --border-light: #EDE7E0;
+    --tag-bg: #EDE7E0;
+    --shadow: 0 1px 3px rgba(26,26,26,0.06);
+    --shadow-hover: 0 8px 30px rgba(26,26,26,0.1);
+    --radius: 10px;
+    --transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    padding: 60px 24px 40px;
+    max-width: 860px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 24px;
+    right: 24px;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2.4rem, 6vw, 3.6rem);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin-bottom: 12px;
+  }
+
+  .header .subtitle {
+    font-size: 1.05rem;
+    color: var(--text-muted);
+    font-weight: 300;
+    max-width: 520px;
+    margin-bottom: 24px;
+  }
+
+  .contact-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .contact-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: 100px;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: var(--transition);
+  }
+
+  .contact-pill:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .contact-pill svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+  }
+
+  /* ── NARRATIVE INTRO ── */
+  .narrative {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 48px 24px 32px;
+  }
+
+  .narrative-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    margin-bottom: 14px;
+    font-weight: 500;
+  }
+
+  .narrative p {
+    font-size: 1.05rem;
+    color: var(--text-muted);
+    max-width: 600px;
+    font-weight: 300;
+    line-height: 1.75;
+  }
+
+  /* ── SECTIONS CONTAINER ── */
+  .sections {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 16px 24px 60px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* ── ACCORDION SECTION ── */
+  .section {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: box-shadow var(--transition);
+  }
+
+  .section:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .section-trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 22px 24px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: left;
+    transition: background var(--transition);
+  }
+
+  .section-trigger:hover {
+    background: rgba(0,0,0,0.015);
+  }
+
+  .section-trigger-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-width: 0;
+  }
+
+  .section-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--tag-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background var(--transition), transform var(--transition);
+  }
+
+  .section.open .section-icon {
+    background: var(--accent);
+  }
+
+  .section.open .section-icon svg {
+    color: white;
+  }
+
+  .section-icon svg {
+    width: 18px;
+    height: 18px;
+    color: var(--text-muted);
+    transition: color var(--transition);
+  }
+
+  .section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.3rem;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+
+  .section-summary {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    font-weight: 300;
+    margin-top: 2px;
+  }
+
+  .section-chevron {
+    width: 20px;
+    height: 20px;
+    color: var(--text-muted);
+    transition: transform var(--transition);
+    flex-shrink: 0;
+    margin-left: 12px;
+  }
+
+  .section.open .section-chevron {
+    transform: rotate(180deg);
+  }
+
+  .section-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .section.open .section-body {
+    max-height: 2000px;
+  }
+
+  .section-content {
+    padding: 0 24px 28px;
+    opacity: 0;
+    transform: translateY(-8px);
+    transition: opacity 0.3s ease 0.1s, transform 0.3s ease 0.1s;
+  }
+
+  .section.open .section-content {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ── EXPERIENCE ITEMS ── */
+  .exp-item {
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  .exp-item:last-child { border-bottom: none; }
+
+  .exp-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+
+  .exp-role {
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  .exp-company {
+    color: var(--accent);
+    font-weight: 500;
+    font-size: 0.88rem;
+  }
+
+  .exp-date {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    padding-top: 3px;
+  }
+
+  .exp-desc {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    font-weight: 300;
+    line-height: 1.7;
+    margin-bottom: 10px;
+  }
+
+  .exp-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .tag {
+    padding: 3px 10px;
+    background: var(--tag-bg);
+    border-radius: 100px;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+
+  /* ── PROJECTS GRID ── */
+  .projects-label {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 24px 16px;
+  }
+
+  .projects-grid {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+  }
+
+  .project-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: box-shadow var(--transition), transform var(--transition);
+    cursor: pointer;
+  }
+
+  .project-card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-3px);
+  }
+
+  .project-thumb {
+    width: 100%;
+    aspect-ratio: 16/10;
+    background: var(--tag-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .project-thumb-inner {
+    width: 60%;
+    height: 60%;
+    border-radius: 6px;
+    opacity: 0.5;
+  }
+
+  .project-info {
+    padding: 16px;
+  }
+
+  .project-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+  }
+
+  .project-meta {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-weight: 300;
+  }
+
+  .project-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 10px;
+    font-size: 0.78rem;
+    color: var(--accent);
+    font-weight: 500;
+    text-decoration: none;
+    transition: gap var(--transition);
+  }
+
+  .project-link:hover { gap: 8px; }
+
+  .project-link svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  /* ── SKILLS BAR ── */
+  .skills-section {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 0 24px 60px;
+  }
+
+  .skills-group {
+    margin-bottom: 20px;
+  }
+
+  .skills-group-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+
+  .skills-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .skill-chip {
+    padding: 6px 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: 100px;
+    font-size: 0.8rem;
+    font-weight: 400;
+    color: var(--text);
+    transition: var(--transition);
+  }
+
+  .skill-chip:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* ── FOOTER ── */
+  .footer {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 32px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .footer-text {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    font-weight: 300;
+  }
+
+  .footer-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .footer-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    border-radius: 100px;
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+  }
+
+  .footer-btn:hover { opacity: 0.85; }
+
+  .footer-btn.outline {
+    background: none;
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .footer-btn.outline:hover {
+    border-color: var(--text);
+  }
+
+  .footer-btn svg { width: 14px; height: 14px; }
+
+  /* ── PAGE LOAD ANIMATION ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .animate-in {
+    animation: fadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) both;
+  }
+
+  .header { animation-delay: 0s; }
+  .narrative { animation-delay: 0.1s; }
+  .sections { animation-delay: 0.2s; }
+  .projects-label { animation-delay: 0.3s; }
+  .projects-grid { animation-delay: 0.35s; }
+
+  /* ── MOBILE ADJUSTMENTS ── */
+  @media (max-width: 600px) {
+    .header { padding: 40px 18px 32px; }
+    .header::after { left: 18px; right: 18px; }
+    .narrative { padding: 36px 18px 24px; }
+    .sections { padding: 12px 18px 48px; }
+    .projects-grid { padding: 0 18px 60px; grid-template-columns: 1fr 1fr; }
+    .projects-label { padding: 0 18px 12px; }
+    .section-trigger { padding: 18px; }
+    .section-content { padding: 0 18px 22px; }
+    .section-title { font-size: 1.1rem; }
+    .section-summary { display: none; }
+    .footer { padding: 24px 18px; }
+    .skills-section { padding: 0 18px 48px; }
+  }
+
+  @media (max-width: 400px) {
+    .projects-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── DESKTOP ENHANCEMENTS ── */
+  @media (min-width: 1024px) {
+    .header { padding: 80px 24px 48px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header animate-in">
+  <h1>Alex Morgan</h1>
+  <p class="subtitle">Product designer who builds things — from interfaces to travel booking flows, shaped by a year of solo travel and a decade of shipping digital products.</p>
+  <div class="contact-row">
+    <a href="mailto:alex@example.com" class="contact-pill">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 4 10 8 10-8"/></svg>
+      alex@example.com
+    </a>
+    <a href="#" class="contact-pill">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65S8.93 17.38 9 18v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>
+      github.com/alexm
+    </a>
+    <a href="#" class="contact-pill">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+      LinkedIn
+    </a>
+    <span class="contact-pill">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+      Tbilisi, Georgia
+    </span>
+  </div>
+</header>
+
+<!-- NARRATIVE -->
+<section class="narrative animate-in">
+  <div class="narrative-label">About</div>
+  <p>I design digital products with a bias toward clarity and craft. My path hasn't been linear — a year of solo backpacking reshaped how I think about user flows, especially in travel tech. I bring cross-domain curiosity: from fintech dashboards to education platforms, every problem is a system to untangle.</p>
+</section>
+
+<!-- EXPANDABLE SECTIONS -->
+<div class="sections animate-in">
+
+  <!-- WORK -->
+  <div class="section open" id="sec-work">
+    <button class="section-trigger" onclick="toggleSection('sec-work')">
+      <div class="section-trigger-left">
+        <div class="section-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+        </div>
+        <div>
+          <div class="section-title">Work Experience</div>
+          <div class="section-summary">6+ years across product design, UX, and frontend</div>
+        </div>
+      </div>
+      <svg class="section-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+    <div class="section-body">
+      <div class="section-content">
+        <div class="exp-item">
+          <div class="exp-header">
+            <div>
+              <div class="exp-role">Senior Product Designer</div>
+              <div class="exp-company">Wanderlust Travel</div>
+            </div>
+            <div class="exp-date">2022 — Present</div>
+          </div>
+          <div class="exp-desc">Redesigned the entire booking funnel, increasing conversion by 23%. Led a team of 3 designers through a complete design system overhaul. My solo travel experience directly influenced how we rethought the mobile-first search experience.</div>
+          <div class="exp-tags">
+            <span class="tag">Figma</span>
+            <span class="tag">Design Systems</span>
+            <span class="tag">User Research</span>
+            <span class="tag">A/B Testing</span>
+          </div>
+        </div>
+        <div class="exp-item">
+          <div class="exp-header">
+            <div>
+              <div class="exp-role">Product Designer</div>
+              <div class="exp-company">FinFlow</div>
+            </div>
+            <div class="exp-date">2019 — 2022</div>
+          </div>
+          <div class="exp-desc">Owned the dashboard experience for 50k+ users. Introduced data visualization patterns that reduced support tickets by 40%. Collaborated closely with engineering on component architecture.</div>
+          <div class="exp-tags">
+            <span class="tag">Dashboard Design</span>
+            <span class="tag">Data Viz</span>
+            <span class="tag">React</span>
+            <span class="tag">Prototyping</span>
+          </div>
+        </div>
+        <div class="exp-item">
+          <div class="exp-header">
+            <div>
+              <div class="exp-role">UX Designer</div>
+              <div class="exp-company">EduSpark</div>
+            </div>
+            <div class="exp-date">2017 — 2019</div>
+          </div>
+          <div class="exp-desc">Designed learning interfaces for K-12 platforms. Discovered that problem-solving skills in children are deeply influenced by how interfaces scaffold complexity — a lesson that shaped my entire design philosophy.</div>
+          <div class="exp-tags">
+            <span class="tag">EdTech</span>
+            <span class="tag">Accessibility</span>
+            <span class="tag">User Testing</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDUCATION -->
+  <div class="section" id="sec-edu">
+    <button class="section-trigger" onclick="toggleSection('sec-edu')">
+      <div class="section-trigger-left">
+        <div class="section-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 1.1 2.7 3 6 3s6-1.9 6-3v-5"/></svg>
+        </div>
+        <div>
+          <div class="section-title">Education</div>
+          <div class="section-summary">Design foundations and continuous learning</div>
+        </div>
+      </div>
+      <svg class="section-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+    <div class="section-body">
+      <div class="section-content">
+        <div class="exp-item">
+          <div class="exp-header">
+            <div>
+              <div class="exp-role">B.A. in Visual Communication</div>
+              <div class="exp-company">Royal Academy of Design</div>
+            </div>
+            <div class="exp-date">2013 — 2017</div>
+          </div>
+          <div class="exp-desc">Specialized in interaction design and typography. Thesis project: an interactive wayfinding system for hospitals that reduced navigation errors by 60% in user testing.</div>
+        </div>
+        <div class="exp-item">
+          <div class="exp-header">
+            <div>
+              <div class="exp-role">UX Certification</div>
+              <div class="exp-company">Google / Coursera</div>
+            </div>
+            <div class="exp-date">2020</div>
+          </div>
+          <div class="exp-desc">Completed the full professional certificate. Focused on research methodologies and accessibility standards.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIFE EXPERIENCE -->
+  <div class="section" id="sec-life">
+    <button class="section-trigger" onclick="toggleSection('sec-life')">
+      <div class="section-trigger-left">
+        <div class="section-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>
+        </div>
+        <div>
+          <div class="section-title">Life Experience</div>
+          <div class="section-summary">The year that changed how I design</div>
+        </div>
+      </div>
+      <svg class="section-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+    <div class="section-body">
+      <div class="section-content">
+        <div class="exp-item">
+          <div class="exp-header">
+            <div>
+              <div class="exp-role">Solo Backpacking — 14 Countries</div>
+              <div class="exp-company">Southeast Asia, South America, Eastern Europe</div>
+            </div>
+            <div class="exp-date">2021 — 2022</div>
+          </div>
+          <div class="exp-desc">A year away from screens taught me more about user empathy than any workshop. Navigating foreign booking systems with bad connectivity showed me exactly where travel UX fails. This directly led to my role at Wanderlust, where I applied every frustration as a design insight. Also became conversational in Spanish and basic Georgian.</div>
+          <div class="exp-tags">
+            <span class="tag">Empathy</span>
+            <span class="tag">Cross-cultural</span>
+            <span class="tag">Travel Tech Insights</span>
+          </div>
+        </div>
+        <div class="exp-item">
+          <div class="exp-header">
+            <div>
+              <div class="exp-role">Volunteer Design Mentor</div>
+              <div class="exp-company">Design for Good — Tbilisi Chapter</div>
+            </div>
+            <div class="exp-date">2023 — Present</div>
+          </div>
+          <div class="exp-desc">Mentoring junior designers from non-traditional backgrounds. Running monthly portfolio reviews and workshop sessions on building design thinking into everyday problem-solving.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- SKILLS -->
+<div class="skills-section animate-in">
+  <div class="narrative-label">Skills & Tools</div>
+  <div class="skills-group">
+    <div class="skills-group-title">Design</div>
+    <div class="skills-wrap">
+      <span class="skill-chip">Figma</span>
+      <span class="skill-chip">Prototyping</span>
+      <span class="skill-chip">Design Systems</span>
+      <span class="skill-chip">User Research</span>
+      <span class="skill-chip">Wireframing</span>
+      <span class="skill-chip">Typography</span>
+      <span class="skill-chip">Motion Design</span>
+    </div>
+  </div>
+  <div class="skills-group">
+    <div class="skills-group-title">Technical</div>
+    <div class="skills-wrap">
+      <span class="skill-chip">HTML / CSS</span>
+      <span class="skill-chip">React</span>
+      <span class="skill-chip">JavaScript</span>
+      <span class="skill-chip">Tailwind</span>
+      <span class="skill-chip">Git</span>
+    </div>
+  </div>
+  <div class="skills-group">
+    <div class="skills-group-title">Languages</div>
+    <div class="skills-wrap">
+      <span class="skill-chip">English — Native</span>
+      <span class="skill-chip">Spanish — Conversational</span>
+      <span class="skill-chip">Georgian — Basic</span>
+    </div>
+  </div>
+</div>
+
+<!-- PROJECTS -->
+<div class="projects-label animate-in">
+  <div class="narrative-label">Selected Projects</div>
+</div>
+
+<div class="projects-grid animate-in">
+  <div class="project-card">
+    <div class="project-thumb">
+      <div class="project-thumb-inner" style="background: linear-gradient(135deg, #C45D3E 0%, #E8A87C 100%);"></div>
+    </div>
+    <div class="project-info">
+      <div class="project-name">Wanderlust Booking Redesign</div>
+      <div class="project-meta">Product Design · 2023</div>
+      <a href="#" class="project-link">View case study <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+    </div>
+  </div>
+
+  <div class="project-card">
+    <div class="project-thumb">
+      <div class="project-thumb-inner" style="background: linear-gradient(135deg, #2D5A6B 0%, #7CB8C9 100%);"></div>
+    </div>
+    <div class="project-info">
+      <div class="project-name">FinFlow Dashboard</div>
+      <div class="project-meta">Data Visualization · 2021</div>
+      <a href="#" class="project-link">View case study <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+    </div>
+  </div>
+
+  <div class="project-card">
+    <div class="project-thumb">
+      <div class="project-thumb-inner" style="background: linear-gradient(135deg, #6B4E3D 0%, #C4A882 100%);"></div>
+    </div>
+    <div class="project-info">
+      <div class="project-name">Hospital Wayfinding</div>
+      <div class="project-meta">Thesis Project · 2017</div>
+      <a href="#" class="project-link">View case study <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-text">Last updated March 2026 · Built as a digital tool</div>
+  <div class="footer-actions">
+    <button class="footer-btn outline" onclick="window.print()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Print
+    </button>
+    <a href="mailto:alex@example.com" class="footer-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 4 10 8 10-8"/></svg>
+      Get in touch
+    </a>
+  </div>
+</footer>
+
+<script>
+  function toggleSection(id) {
+    const el = document.getElementById(id);
+    const isOpen = el.classList.contains('open');
+    // Close all
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('open'));
+    // Toggle clicked
+    if (!isOpen) el.classList.add('open');
+  }
+</script>
+
+</body>
+</html>
