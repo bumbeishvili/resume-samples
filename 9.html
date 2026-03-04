@@ -1,0 +1,496 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Concept 09 / 20 — Topographic Map</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+        body{background:#0a0a0a;font-family:'Space Mono',monospace;min-height:100vh;-webkit-font-smoothing:antialiased}
+
+        /* ═══ OUTER PAGE ═══ */
+        .concept-header{max-width:1340px;margin:0 auto;padding:52px 48px 28px}
+        .concept-meta{display:flex;align-items:center;gap:16px;margin-bottom:16px}
+        .concept-num{font-size:11px;font-weight:400;letter-spacing:.08em;color:#505050;text-transform:uppercase}
+        .concept-tag{font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#a08c6a;border:1px solid rgba(160,140,106,.25);background:rgba(160,140,106,.06);padding:4px 11px 3px;border-radius:3px}
+        .concept-title{font-family:'Instrument Serif',serif;font-size:40px;font-weight:400;color:#f0f0f0;margin-bottom:12px}
+        .concept-desc{font-size:12.5px;font-weight:400;line-height:1.75;color:#5a5a5a;max-width:660px}
+
+        /* ═══ DEVICE FRAMES ═══ */
+        .devices-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+        .devices{display:flex;justify-content:center;align-items:flex-start;gap:52px;padding:20px 48px 96px;min-width:1340px}
+        .device-col{display:flex;flex-direction:column;align-items:center;gap:18px}
+        .device-label{font-size:10px;font-weight:400;letter-spacing:.06em;color:#2e2e2e}
+        .desktop-frame{width:840px;height:594px;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.2),0 8px 32px rgba(0,0,0,.4),inset 0 0 0 1px rgba(255,255,255,.03)}
+        .mobile-frame{width:320px;height:620px;border-radius:28px;border:5px solid #1a1a1a;overflow:hidden;position:relative;box-shadow:0 1px 4px rgba(0,0,0,.2),0 8px 32px rgba(0,0,0,.4)}
+        .mobile-frame::before{content:'';position:absolute;top:8px;left:50%;transform:translateX(-50%);width:76px;height:22px;background:#111;border-radius:12px;z-index:10}
+
+        /* ═══ SHARED TOPO VARS ═══ */
+        .topo{
+            --paper:#f7f3ee;--ink:#2c2418;--mid:#7a6e5d;--light:#b0a48e;--faint:#d4c9b6;--rule:#c4b69c;
+            --terra:#c17c4e;--sage:#5c8a6b;--slate:#6882a0;--ochre:#c4a44e;
+            --contour:rgba(175,155,120,.12);
+            font-family:'Space Mono',monospace;color:var(--ink)
+        }
+
+        /* ═══ CONTOUR ELEMENT ═══ */
+        .ct{position:absolute;border:1px solid;pointer-events:none;z-index:0}
+
+        /* ═══ ELEVATION LABELS ═══ */
+        .elev{position:absolute;font-size:6px;font-weight:400;color:rgba(175,155,120,.3);pointer-events:none;z-index:0}
+
+        /* ═══════════════════════════════════════
+           DESKTOP CV
+           ═══════════════════════════════════════ */
+        .d-cv{
+            width:840px;height:594px;background:var(--paper);
+            padding:30px 34px;position:relative;overflow:hidden;
+            display:flex;flex-direction:column;
+        }
+        /* grid lines */
+        .d-cv::before{
+            content:'';position:absolute;inset:0;z-index:0;pointer-events:none;
+            background:
+                repeating-linear-gradient(0deg,transparent,transparent 59px,rgba(175,155,120,.035) 59px,rgba(175,155,120,.035) 60px),
+                repeating-linear-gradient(90deg,transparent,transparent 59px,rgba(175,155,120,.035) 59px,rgba(175,155,120,.035) 60px);
+        }
+        .d-cv>*{position:relative;z-index:1}
+
+        /* ── Header zone ── */
+        .d-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
+        .d-name-block{}
+        .d-name{font-family:'Instrument Serif',serif;font-size:42px;font-weight:400;line-height:.95;color:var(--ink);letter-spacing:-.01em}
+        .d-name-rule{width:100px;height:2px;background:var(--ink);margin:8px 0 6px}
+        .d-jobtitle{font-size:10px;font-weight:400;color:var(--mid);margin-bottom:2px}
+        .d-years{font-size:9px;font-weight:400;color:var(--light)}
+
+        .d-stats-block{text-align:right;display:flex;flex-direction:column;gap:10px;padding-top:4px}
+        .d-coords{font-size:9px;font-weight:700;color:var(--mid);letter-spacing:.04em;margin-bottom:4px}
+        .d-markers{display:flex;flex-direction:column;gap:5px}
+        .d-marker{display:flex;align-items:baseline;gap:7px;justify-content:flex-end}
+        .d-marker-icon{color:var(--terra);font-size:8px}
+        .d-marker-val{font-size:16px;font-weight:700;color:var(--ink)}
+        .d-marker-lbl{font-size:7px;font-weight:400;color:var(--light);text-transform:uppercase;letter-spacing:.06em}
+
+        /* ── Chart zone ── */
+        .d-chart-section{margin-bottom:16px}
+        .d-section-head{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+        .d-section-title{font-size:7px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--light);white-space:nowrap}
+        .d-section-line{flex:1;height:1px;background:var(--rule)}
+
+        .d-chart-wrap{display:flex;gap:6px;align-items:flex-end}
+        .d-chart-y{display:flex;flex-direction:column;justify-content:space-between;height:68px;padding-bottom:18px}
+        .d-chart-y span{font-size:6px;color:var(--light);text-align:right;width:10px}
+        .d-chart-bars{display:flex;align-items:flex-end;gap:5px;height:68px;flex:1}
+        .d-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end}
+        .d-bar{width:100%;border-radius:2px 2px 0 0;min-height:2px}
+        .d-bar-lbl{font-size:6px;color:var(--light);margin-top:4px;white-space:nowrap}
+
+        /* ── Bottom grid (3 columns) ── */
+        .d-bottom{display:grid;grid-template-columns:1fr 1fr 1fr;gap:28px;flex:1}
+
+        .d-col-label{font-size:7px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--light);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--faint)}
+
+        /* Experience */
+        .d-wp{margin-bottom:10px;padding-left:14px;position:relative}
+        .d-wp::before{content:'';position:absolute;left:0;top:5px;width:6px;height:6px;border-radius:50%;background:var(--terra);border:1.5px solid var(--paper);box-shadow:0 0 0 1px var(--terra)}
+        .d-wp-company{font-size:10px;font-weight:700;color:var(--ink)}
+        .d-wp-role{font-size:8px;font-weight:400;color:var(--mid);margin-top:1px}
+        .d-wp-meta{font-size:7px;font-weight:400;color:var(--light);margin-top:1px}
+
+        /* Education */
+        .d-edu{margin-bottom:8px}
+        .d-edu-degree{font-size:9px;font-weight:700;color:var(--ink)}
+        .d-edu-school{font-size:8px;font-weight:400;color:var(--mid);margin-top:1px}
+        .d-edu-year{font-size:7px;font-weight:400;color:var(--light);margin-top:1px}
+
+        .d-tools{margin-top:10px}
+        .d-tools-label{font-size:7px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--light);margin-bottom:5px}
+        .d-tools-list{font-size:7.5px;font-weight:400;color:var(--mid);line-height:1.7}
+
+        /* Legend */
+        .d-legend-list{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+        .d-legend-item{display:flex;align-items:center;gap:7px;font-size:8px;font-weight:400;color:var(--mid)}
+        .d-legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+        .d-contact{margin-top:auto}
+        .d-contact-item{font-size:7.5px;font-weight:400;color:var(--mid);margin-bottom:3px}
+
+        /* Compass */
+        .d-compass{position:absolute;bottom:26px;right:30px;display:flex;flex-direction:column;align-items:center;gap:1px;z-index:1}
+        .d-compass-n{font-size:7px;font-weight:700;color:var(--light)}
+        .d-compass-arrow{width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-bottom:14px solid var(--light)}
+        .d-compass-s{width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:10px solid var(--faint);margin-top:1px}
+
+        /* Scale bar */
+        .d-scale{position:absolute;bottom:28px;left:34px;z-index:1}
+        .d-scale-bar{display:flex;height:3px;margin-bottom:3px}
+        .d-scale-seg{width:30px;height:100%}
+        .d-scale-seg:nth-child(odd){background:var(--light)}
+        .d-scale-seg:nth-child(even){background:var(--faint)}
+        .d-scale-labels{display:flex;justify-content:space-between;width:120px}
+        .d-scale-labels span{font-size:5.5px;color:var(--light)}
+
+        /* ═══════════════════════════════════════
+           MOBILE CV
+           ═══════════════════════════════════════ */
+        .m-cv{
+            width:100%;height:100%;background:var(--paper);
+            padding:42px 16px 16px;overflow-y:auto;overflow-x:hidden;
+            position:relative;scrollbar-width:none;
+        }
+        .m-cv::-webkit-scrollbar{display:none}
+        .m-cv::before{
+            content:'';position:absolute;inset:0;z-index:0;pointer-events:none;
+            background:
+                repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(175,155,120,.03) 39px,rgba(175,155,120,.03) 40px),
+                repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(175,155,120,.03) 39px,rgba(175,155,120,.03) 40px);
+        }
+        .m-cv>*{position:relative;z-index:1}
+
+        .m-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+        .m-name{font-family:'Instrument Serif',serif;font-size:26px;font-weight:400;line-height:.95;color:var(--ink)}
+        .m-name-rule{width:60px;height:1.5px;background:var(--ink);margin:5px 0 4px}
+        .m-jobtitle{font-size:8px;color:var(--mid)}
+        .m-coords{font-size:7px;font-weight:700;color:var(--mid);text-align:right;line-height:1.5}
+
+        .m-markers{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px}
+        .m-marker{display:flex;align-items:baseline;gap:5px}
+        .m-marker-icon{color:var(--terra);font-size:7px}
+        .m-marker-val{font-size:14px;font-weight:700;color:var(--ink)}
+        .m-marker-lbl{font-size:6px;color:var(--light);text-transform:uppercase;letter-spacing:.04em}
+
+        .m-sep{height:1px;background:var(--faint);margin:10px 0}
+        .m-label{font-size:6.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--light);margin-bottom:8px}
+
+        .m-chart-bars{display:flex;align-items:flex-end;gap:3px;height:48px;margin-bottom:2px}
+        .m-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end}
+        .m-bar{width:100%;border-radius:1.5px 1.5px 0 0;min-height:1px}
+        .m-bar-lbl{font-size:5px;color:var(--light);margin-top:2px}
+
+        .m-wp{margin-bottom:7px;padding-left:12px;position:relative}
+        .m-wp::before{content:'';position:absolute;left:0;top:4px;width:5px;height:5px;border-radius:50%;background:var(--terra)}
+        .m-wp-company{font-size:9px;font-weight:700;color:var(--ink)}
+        .m-wp-role{font-size:7px;color:var(--mid);margin-top:1px}
+        .m-wp-meta{font-size:6.5px;color:var(--light)}
+
+        .m-edu{margin-bottom:5px}
+        .m-edu-degree{font-size:8px;font-weight:700;color:var(--ink)}
+        .m-edu-school{font-size:7px;color:var(--mid)}
+
+        .m-legend-row{display:flex;flex-wrap:wrap;gap:8px}
+        .m-legend-item{display:flex;align-items:center;gap:4px;font-size:7px;color:var(--mid)}
+        .m-legend-dot{width:6px;height:6px;border-radius:50%}
+
+        .m-contact{font-size:7px;color:var(--light);margin-top:10px;text-align:center}
+    </style>
+</head>
+<body>
+
+    <header class="concept-header">
+        <div class="concept-meta">
+            <span class="concept-num">Concept 09 / 20</span>
+            <span class="concept-tag">Medium – Wild</span>
+        </div>
+        <h1 class="concept-title">Topographic Map</h1>
+        <p class="concept-desc">A career rendered as cartography — warm parchment scored with CSS contour lines, elevation markers for stats, and a terrain-profile bar chart. Experience becomes waypoints; education a base camp. Instrument Serif meets Space Mono on a surveyor's canvas.</p>
+    </header>
+
+    <div class="devices-scroll">
+        <div class="devices">
+
+            <!-- ──────── DESKTOP ──────── -->
+            <div class="device-col">
+                <div class="desktop-frame">
+                    <div class="d-cv topo">
+
+                        <!-- Contour cluster 1 — upper right -->
+                        <div class="ct" style="width:500px;height:360px;top:-55px;right:-80px;border-radius:55% 45% 52% 48%/47% 53% 48% 52%;border-color:rgba(175,155,120,.06)"></div>
+                        <div class="ct" style="width:440px;height:310px;top:-30px;right:-55px;border-radius:52% 48% 56% 44%/50% 50% 45% 55%;border-color:rgba(175,155,120,.07)"></div>
+                        <div class="ct" style="width:382px;height:264px;top:-6px;right:-32px;border-radius:48% 52% 54% 46%/52% 48% 47% 53%;border-color:rgba(175,155,120,.08)"></div>
+                        <div class="ct" style="width:328px;height:222px;top:14px;right:-12px;border-radius:54% 46% 50% 50%/48% 52% 50% 50%;border-color:rgba(175,155,120,.09)"></div>
+                        <div class="ct" style="width:278px;height:184px;top:32px;right:6px;border-radius:50% 50% 55% 45%/46% 54% 48% 52%;border-color:rgba(175,155,120,.10)"></div>
+                        <div class="ct" style="width:230px;height:148px;top:48px;right:22px;border-radius:52% 48% 48% 52%/50% 50% 52% 48%;border-color:rgba(175,155,120,.11)"></div>
+                        <div class="ct" style="width:184px;height:116px;top:62px;right:36px;border-radius:48% 52% 53% 47%/52% 48% 47% 53%;border-color:rgba(175,155,120,.12)"></div>
+                        <div class="ct" style="width:140px;height:86px;top:74px;right:48px;border-radius:55% 45% 50% 50%/47% 53% 50% 50%;border-color:rgba(175,155,120,.14)"></div>
+
+                        <!-- Contour cluster 2 — lower left -->
+                        <div class="ct" style="width:300px;height:220px;bottom:-45px;left:-55px;border-radius:48% 52% 45% 55%/52% 48% 53% 47%;border-color:rgba(175,155,120,.05)"></div>
+                        <div class="ct" style="width:244px;height:176px;bottom:-22px;left:-32px;border-radius:52% 48% 50% 50%/48% 52% 50% 50%;border-color:rgba(175,155,120,.06)"></div>
+                        <div class="ct" style="width:192px;height:136px;bottom:-2px;left:-12px;border-radius:47% 53% 52% 48%/53% 47% 48% 52%;border-color:rgba(175,155,120,.07)"></div>
+                        <div class="ct" style="width:144px;height:100px;bottom:16px;left:6px;border-radius:53% 47% 48% 52%/48% 52% 53% 47%;border-color:rgba(175,155,120,.08)"></div>
+                        <div class="ct" style="width:100px;height:68px;bottom:32px;left:22px;border-radius:50% 50% 54% 46%/46% 54% 50% 50%;border-color:rgba(175,155,120,.10)"></div>
+
+                        <!-- Elevation labels -->
+                        <span class="elev" style="top:82px;right:196px;transform:rotate(-12deg)">486</span>
+                        <span class="elev" style="top:46px;right:280px;transform:rotate(-6deg)">412</span>
+                        <span class="elev" style="top:12px;right:360px;transform:rotate(-3deg)">358</span>
+                        <span class="elev" style="bottom:52px;left:88px;transform:rotate(8deg)">264</span>
+                        <span class="elev" style="bottom:16px;left:160px;transform:rotate(4deg)">198</span>
+
+                        <!-- Compass -->
+                        <div class="d-compass">
+                            <span class="d-compass-n">N</span>
+                            <div class="d-compass-arrow"></div>
+                            <div class="d-compass-s"></div>
+                        </div>
+
+                        <!-- Scale bar -->
+                        <div class="d-scale">
+                            <div class="d-scale-bar">
+                                <div class="d-scale-seg"></div><div class="d-scale-seg"></div>
+                                <div class="d-scale-seg"></div><div class="d-scale-seg"></div>
+                            </div>
+                            <div class="d-scale-labels"><span>0</span><span>4</span><span>8</span><span>12 yrs</span></div>
+                        </div>
+
+                        <!-- ── HEADER ── -->
+                        <div class="d-head">
+                            <div class="d-name-block">
+                                <div class="d-name">Tomás<br>Herrera</div>
+                                <div class="d-name-rule"></div>
+                                <div class="d-jobtitle">Architect · Barcelona, ES</div>
+                                <div class="d-years">12 years practice · Est. 2012</div>
+                            </div>
+                            <div class="d-stats-block">
+                                <div class="d-coords">41.3874°N, 2.1686°E</div>
+                                <div class="d-markers">
+                                    <div class="d-marker">
+                                        <span class="d-marker-lbl">Built Projects</span>
+                                        <span class="d-marker-val">16</span>
+                                        <span class="d-marker-icon">▲</span>
+                                    </div>
+                                    <div class="d-marker">
+                                        <span class="d-marker-lbl">m² Designed</span>
+                                        <span class="d-marker-val">2,847</span>
+                                        <span class="d-marker-icon">▲</span>
+                                    </div>
+                                    <div class="d-marker">
+                                        <span class="d-marker-lbl">RIBA Awards</span>
+                                        <span class="d-marker-val">3</span>
+                                        <span class="d-marker-icon">▲</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ── CHART ── -->
+                        <div class="d-chart-section">
+                            <div class="d-section-head">
+                                <span class="d-section-title">Terrain Profile — Projects by Year</span>
+                                <div class="d-section-line"></div>
+                            </div>
+                            <div class="d-chart-wrap">
+                                <div class="d-chart-y"><span>2</span><span>1</span><span></span></div>
+                                <div class="d-chart-bars">
+                                    <div class="d-bar-col"><div class="d-bar" style="height:40%;background:var(--terra)"></div><span class="d-bar-lbl">'13</span></div>
+                                    <div class="d-bar-col"><div class="d-bar" style="height:40%;background:var(--slate)"></div><span class="d-bar-lbl">'14</span></div>
+                                    <div class="d-bar-col"><div class="d-bar" style="height:40%;background:var(--terra)"></div><span class="d-bar-lbl">'15</span></div>
+                                    <div class="d-bar-col"><div class="d-bar" style="height:40%;background:var(--sage)"></div><span class="d-bar-lbl">'16</span></div>
+                                    <div class="d-bar-col"><div class="d-bar" style="height:85%;background:var(--terra)"></div><span class="d-bar-lbl">'17</span></div>
+                                    <div class="d-bar-col"><div class="d-bar" style="height:40%;background:var(--ochre)"></div><span class="d-bar-lbl">'18</span></div>
+                                    <div class="d-bar-col"><div class="d-bar" style="height:85%;background:var(--sage)"></div><span class="d-bar-lbl">'19</span></div>
+                                    <div class="d-bar-col"><div class="d-bar" style="height:40%;background:var(--terra)"></div><span class="d-bar-lbl">'20</span></div>
+                                    <div class="d-bar-col"><div class="d-bar" style="height:85%;background:var(--sage)"></div><span class="d-bar-lbl">'21</span></div>
+                                    <div class="d-bar-col"><div class="d-bar" style="height:85%;background:var(--slate)"></div><span class="d-bar-lbl">'22</span></div>
+                                    <div class="d-bar-col"><div class="d-bar" style="height:40%;background:var(--sage)"></div><span class="d-bar-lbl">'23</span></div>
+                                    <div class="d-bar-col"><div class="d-bar" style="height:40%;background:var(--ochre)"></div><span class="d-bar-lbl">'24</span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ── BOTTOM GRID ── -->
+                        <div class="d-bottom">
+
+                            <!-- Waypoints (Experience) -->
+                            <div>
+                                <div class="d-col-label">Waypoints</div>
+                                <div class="d-wp">
+                                    <div class="d-wp-company">Herrera Estudio</div>
+                                    <div class="d-wp-role">Principal Architect</div>
+                                    <div class="d-wp-meta">Barcelona · 2018 – Present</div>
+                                </div>
+                                <div class="d-wp">
+                                    <div class="d-wp-company">OMA</div>
+                                    <div class="d-wp-role">Senior Architect</div>
+                                    <div class="d-wp-meta">Rotterdam · 2016 – 2018</div>
+                                </div>
+                                <div class="d-wp">
+                                    <div class="d-wp-company">Foster + Partners</div>
+                                    <div class="d-wp-role">Architect</div>
+                                    <div class="d-wp-meta">London · 2012 – 2016</div>
+                                </div>
+                            </div>
+
+                            <!-- Base Camp (Education + Tools) -->
+                            <div>
+                                <div class="d-col-label">Base Camp</div>
+                                <div class="d-edu">
+                                    <div class="d-edu-degree">MArch Architecture</div>
+                                    <div class="d-edu-school">ETSAB, Barcelona</div>
+                                    <div class="d-edu-year">2012</div>
+                                </div>
+                                <div class="d-edu">
+                                    <div class="d-edu-degree">Exchange Year</div>
+                                    <div class="d-edu-school">TU Delft, Netherlands</div>
+                                    <div class="d-edu-year">2010</div>
+                                </div>
+                                <div class="d-tools">
+                                    <div class="d-tools-label">Equipment</div>
+                                    <div class="d-tools-list">Rhino · Grasshopper · Revit<br>AutoCAD · SketchUp · V-Ray<br>Adobe Suite · Figma</div>
+                                </div>
+                            </div>
+
+                            <!-- Legend + Contact -->
+                            <div>
+                                <div class="d-col-label">Legend</div>
+                                <div class="d-legend-list">
+                                    <div class="d-legend-item"><div class="d-legend-dot" style="background:var(--terra)"></div> Residential</div>
+                                    <div class="d-legend-item"><div class="d-legend-dot" style="background:var(--sage)"></div> Cultural</div>
+                                    <div class="d-legend-item"><div class="d-legend-dot" style="background:var(--slate)"></div> Commercial</div>
+                                    <div class="d-legend-item"><div class="d-legend-dot" style="background:var(--ochre)"></div> Public Space</div>
+                                </div>
+                                <div class="d-contact">
+                                    <div class="d-contact-item">tomas@herrera.cat</div>
+                                    <div class="d-contact-item">herrera-estudio.com</div>
+                                    <div class="d-contact-item">+34 612 847 093</div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+                <span class="device-label">Desktop — 840 × 594</span>
+            </div>
+
+            <!-- ──────── MOBILE ──────── -->
+            <div class="device-col">
+                <div class="mobile-frame">
+                    <div class="m-cv topo">
+
+                        <!-- Mobile contours -->
+                        <div class="ct" style="width:280px;height:200px;top:-30px;right:-60px;border-radius:52% 48% 55% 45%/48% 52% 46% 54%;border-color:rgba(175,155,120,.06)"></div>
+                        <div class="ct" style="width:230px;height:162px;top:-10px;right:-38px;border-radius:48% 52% 50% 50%/52% 48% 50% 50%;border-color:rgba(175,155,120,.07)"></div>
+                        <div class="ct" style="width:182px;height:126px;top:8px;right:-18px;border-radius:54% 46% 52% 48%/47% 53% 50% 50%;border-color:rgba(175,155,120,.08)"></div>
+                        <div class="ct" style="width:138px;height:94px;top:24px;right:0px;border-radius:50% 50% 48% 52%/53% 47% 52% 48%;border-color:rgba(175,155,120,.10)"></div>
+                        <div class="ct" style="width:96px;height:64px;top:38px;right:16px;border-radius:52% 48% 54% 46%/48% 52% 48% 52%;border-color:rgba(175,155,120,.12)"></div>
+
+                        <div class="ct" style="width:180px;height:130px;bottom:-25px;left:-35px;border-radius:48% 52% 45% 55%/52% 48% 54% 46%;border-color:rgba(175,155,120,.05)"></div>
+                        <div class="ct" style="width:130px;height:90px;bottom:-6px;left:-14px;border-radius:52% 48% 50% 50%/48% 52% 50% 50%;border-color:rgba(175,155,120,.07)"></div>
+                        <div class="ct" style="width:84px;height:56px;bottom:12px;left:4px;border-radius:48% 52% 53% 47%/52% 48% 47% 53%;border-color:rgba(175,155,120,.09)"></div>
+
+                        <span class="elev" style="top:52px;right:56px;transform:rotate(-10deg)">486</span>
+                        <span class="elev" style="bottom:30px;left:52px;transform:rotate(6deg)">264</span>
+
+                        <!-- Header -->
+                        <div class="m-head">
+                            <div>
+                                <div class="m-name">Tomás<br>Herrera</div>
+                                <div class="m-name-rule"></div>
+                                <div class="m-jobtitle">Architect · Barcelona</div>
+                            </div>
+                            <div class="m-coords">41.3874°N<br>2.1686°E</div>
+                        </div>
+
+                        <!-- Markers -->
+                        <div class="m-markers">
+                            <div class="m-marker">
+                                <span class="m-marker-icon">▲</span>
+                                <span class="m-marker-val">16</span>
+                                <span class="m-marker-lbl">Projects</span>
+                            </div>
+                            <div class="m-marker">
+                                <span class="m-marker-icon">▲</span>
+                                <span class="m-marker-val">2,847</span>
+                                <span class="m-marker-lbl">m²</span>
+                            </div>
+                            <div class="m-marker">
+                                <span class="m-marker-icon">▲</span>
+                                <span class="m-marker-val">3</span>
+                                <span class="m-marker-lbl">RIBA Awards</span>
+                            </div>
+                            <div class="m-marker">
+                                <span class="m-marker-icon">▲</span>
+                                <span class="m-marker-val">12</span>
+                                <span class="m-marker-lbl">Years</span>
+                            </div>
+                        </div>
+
+                        <div class="m-sep"></div>
+
+                        <!-- Chart -->
+                        <div class="m-label">Terrain Profile</div>
+                        <div class="m-chart-bars">
+                            <div class="m-bar-col"><div class="m-bar" style="height:40%;background:var(--terra)"></div><span class="m-bar-lbl">'13</span></div>
+                            <div class="m-bar-col"><div class="m-bar" style="height:40%;background:var(--slate)"></div><span class="m-bar-lbl">'14</span></div>
+                            <div class="m-bar-col"><div class="m-bar" style="height:40%;background:var(--terra)"></div><span class="m-bar-lbl">'15</span></div>
+                            <div class="m-bar-col"><div class="m-bar" style="height:40%;background:var(--sage)"></div><span class="m-bar-lbl">'16</span></div>
+                            <div class="m-bar-col"><div class="m-bar" style="height:85%;background:var(--terra)"></div><span class="m-bar-lbl">'17</span></div>
+                            <div class="m-bar-col"><div class="m-bar" style="height:40%;background:var(--ochre)"></div><span class="m-bar-lbl">'18</span></div>
+                            <div class="m-bar-col"><div class="m-bar" style="height:85%;background:var(--sage)"></div><span class="m-bar-lbl">'19</span></div>
+                            <div class="m-bar-col"><div class="m-bar" style="height:40%;background:var(--terra)"></div><span class="m-bar-lbl">'20</span></div>
+                            <div class="m-bar-col"><div class="m-bar" style="height:85%;background:var(--sage)"></div><span class="m-bar-lbl">'21</span></div>
+                            <div class="m-bar-col"><div class="m-bar" style="height:85%;background:var(--slate)"></div><span class="m-bar-lbl">'22</span></div>
+                            <div class="m-bar-col"><div class="m-bar" style="height:40%;background:var(--sage)"></div><span class="m-bar-lbl">'23</span></div>
+                            <div class="m-bar-col"><div class="m-bar" style="height:40%;background:var(--ochre)"></div><span class="m-bar-lbl">'24</span></div>
+                        </div>
+
+                        <div class="m-sep"></div>
+
+                        <!-- Waypoints -->
+                        <div class="m-label">Waypoints</div>
+                        <div class="m-wp">
+                            <div class="m-wp-company">Herrera Estudio</div>
+                            <div class="m-wp-role">Principal · Barcelona</div>
+                            <div class="m-wp-meta">2018 – Present</div>
+                        </div>
+                        <div class="m-wp">
+                            <div class="m-wp-company">OMA</div>
+                            <div class="m-wp-role">Senior Architect · Rotterdam</div>
+                            <div class="m-wp-meta">2016 – 2018</div>
+                        </div>
+                        <div class="m-wp">
+                            <div class="m-wp-company">Foster + Partners</div>
+                            <div class="m-wp-role">Architect · London</div>
+                            <div class="m-wp-meta">2012 – 2016</div>
+                        </div>
+
+                        <div class="m-sep"></div>
+
+                        <!-- Base Camp -->
+                        <div class="m-label">Base Camp</div>
+                        <div class="m-edu">
+                            <div class="m-edu-degree">MArch — ETSAB, Barcelona '12</div>
+                        </div>
+                        <div class="m-edu">
+                            <div class="m-edu-degree">Exchange — TU Delft '10</div>
+                        </div>
+
+                        <div class="m-sep"></div>
+
+                        <!-- Legend -->
+                        <div class="m-label">Legend</div>
+                        <div class="m-legend-row">
+                            <div class="m-legend-item"><div class="m-legend-dot" style="background:var(--terra)"></div>Residential</div>
+                            <div class="m-legend-item"><div class="m-legend-dot" style="background:var(--sage)"></div>Cultural</div>
+                            <div class="m-legend-item"><div class="m-legend-dot" style="background:var(--slate)"></div>Commercial</div>
+                            <div class="m-legend-item"><div class="m-legend-dot" style="background:var(--ochre)"></div>Public</div>
+                        </div>
+
+                        <div class="m-contact">tomas@herrera.cat · herrera-estudio.com</div>
+
+                    </div>
+                </div>
+                <span class="device-label">Mobile — 320 × 620</span>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>
