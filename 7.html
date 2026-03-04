@@ -1,0 +1,930 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Concept 07 / 20 — Apple Credit Card</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #0a0a0a;
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ═══════════════════════════════════════
+           OUTER PAGE
+           ═══════════════════════════════════════ */
+        .concept-header {
+            max-width: 1340px;
+            margin: 0 auto;
+            padding: 52px 48px 28px;
+        }
+        .concept-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        .concept-num {
+            font-size: 11px;
+            font-weight: 400;
+            letter-spacing: 0.08em;
+            color: #505050;
+            text-transform: uppercase;
+        }
+        .concept-tag {
+            font-size: 9px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #a78bfa;
+            border: 1px solid rgba(167,139,250,0.22);
+            background: rgba(167,139,250,0.06);
+            padding: 4px 11px 3px;
+            border-radius: 3px;
+        }
+        .concept-title {
+            font-size: 38px;
+            font-weight: 800;
+            color: #f0f0f0;
+            letter-spacing: -0.025em;
+            margin-bottom: 12px;
+        }
+        .concept-desc {
+            font-size: 13px;
+            font-weight: 300;
+            line-height: 1.75;
+            color: #5a5a5a;
+            max-width: 660px;
+        }
+
+        /* ═══════════════════════════════════════
+           DEVICE CONTAINER
+           ═══════════════════════════════════════ */
+        .devices-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .devices {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 52px;
+            padding: 20px 48px 96px;
+            min-width: 1340px;
+        }
+        .device-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 18px;
+        }
+        .device-label {
+            font-size: 10px;
+            font-weight: 400;
+            letter-spacing: 0.06em;
+            color: #2e2e2e;
+        }
+        .desktop-frame {
+            width: 840px;
+            height: 678px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow:
+                0 1px 4px rgba(0,0,0,0.2),
+                0 8px 32px rgba(0,0,0,0.4),
+                inset 0 0 0 1px rgba(255,255,255,0.03);
+        }
+        .mobile-frame {
+            width: 320px;
+            height: 620px;
+            border-radius: 28px;
+            border: 5px solid #1a1a1a;
+            overflow: hidden;
+            position: relative;
+            box-shadow:
+                0 1px 4px rgba(0,0,0,0.2),
+                0 8px 32px rgba(0,0,0,0.4);
+        }
+        .mobile-frame::before {
+            content: '';
+            position: absolute;
+            top: 8px; left: 50%;
+            transform: translateX(-50%);
+            width: 76px; height: 22px;
+            background: #111;
+            border-radius: 12px;
+            z-index: 10;
+        }
+
+        /* ═══════════════════════════════════════
+           SHARED PALETTE
+           ═══════════════════════════════════════ */
+        .apple-cv {
+            --bg: #fafafa;
+            --bg2: #f2f2f7;
+            --text: #1d1d1f;
+            --text2: #6e6e73;
+            --text3: #aeaeb2;
+            --border: #e5e5ea;
+            --red: #ff3b30;
+            --green: #34c759;
+            --purple: #af52de;
+            --ring-r: #fa2d48;
+            --ring-g: #92e639;
+            --ring-b: #5ac8fa;
+            font-family: 'Outfit', sans-serif;
+            color: var(--text);
+        }
+
+        /* ═══════════════════════════════════════
+           DESKTOP RESUME
+           ═══════════════════════════════════════ */
+        .d-cv {
+            width: 840px;
+            height: 678px;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 36px 48px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* ── Credit Card ── */
+        .d-card-area {
+            display: flex;
+            align-items: center;
+            gap: 48px;
+            width: 100%;
+            margin-bottom: 28px;
+        }
+        .d-card {
+            width: 340px;
+            height: 214px;
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+            background: linear-gradient(135deg, #e8e8e8 0%, #f5f5f5 25%, #d4d4d4 50%, #e0e0e0 75%, #f0f0f0 100%);
+            box-shadow:
+                0 2px 8px rgba(0,0,0,0.08),
+                0 8px 24px rgba(0,0,0,0.06),
+                inset 0 1px 0 rgba(255,255,255,0.8),
+                inset 0 -1px 0 rgba(0,0,0,0.04);
+        }
+        .d-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(125deg, transparent 30%, rgba(255,255,255,0.3) 45%, transparent 55%);
+            pointer-events: none;
+        }
+        .d-card-chip {
+            position: absolute;
+            top: 32px; left: 30px;
+            width: 36px; height: 28px;
+            border-radius: 5px;
+            background: linear-gradient(140deg, #d4a84b 0%, #e8c87a 40%, #c49a3c 100%);
+            box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08);
+        }
+        .d-card-chip::after {
+            content: '';
+            position: absolute;
+            top: 6px; left: 8px;
+            width: 20px; height: 16px;
+            border: 1.5px solid rgba(0,0,0,0.12);
+            border-radius: 2px;
+        }
+        .d-card-logo {
+            position: absolute;
+            top: 30px; right: 28px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text3);
+            letter-spacing: 0.04em;
+        }
+        .d-card-name {
+            position: absolute;
+            bottom: 54px; left: 30px;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text2);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .d-card-title {
+            position: absolute;
+            bottom: 34px; left: 30px;
+            font-size: 10px;
+            font-weight: 400;
+            color: var(--text3);
+            letter-spacing: 0.04em;
+        }
+        .d-card-number {
+            position: absolute;
+            bottom: 14px; right: 28px;
+            font-size: 9px;
+            font-weight: 400;
+            color: var(--text3);
+            letter-spacing: 0.15em;
+        }
+
+        /* Card info side */
+        .d-card-info {
+            flex: 1;
+        }
+        .d-card-info-name {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+            margin-bottom: 4px;
+        }
+        .d-card-info-role {
+            font-size: 13px;
+            font-weight: 400;
+            color: var(--text2);
+            margin-bottom: 2px;
+        }
+        .d-card-info-loc {
+            font-size: 11px;
+            font-weight: 300;
+            color: var(--text3);
+            margin-bottom: 14px;
+        }
+        .d-card-info-contact {
+            font-size: 10px;
+            font-weight: 400;
+            color: var(--text2);
+            line-height: 1.7;
+        }
+
+        /* ── Rings Section ── */
+        .d-rings-area {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+            width: 100%;
+            padding: 20px 0;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 24px;
+        }
+        .d-rings-svg {
+            width: 140px;
+            height: 140px;
+            flex-shrink: 0;
+        }
+        .ring-track { fill: none; stroke-width: 12; }
+        .ring-fill {
+            fill: none;
+            stroke-width: 12;
+            stroke-linecap: round;
+            transform-origin: center;
+            transform: rotate(-90deg);
+        }
+        .ring-track-r { stroke: rgba(250,45,72,0.12); }
+        .ring-track-g { stroke: rgba(146,230,57,0.12); }
+        .ring-track-b { stroke: rgba(90,200,250,0.12); }
+        .ring-fill-r { stroke: var(--ring-r); }
+        .ring-fill-g { stroke: var(--ring-g); }
+        .ring-fill-b { stroke: var(--ring-b); }
+
+        .d-rings-data {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+        }
+        .d-ring-stat {
+            text-align: center;
+        }
+        .d-ring-stat-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            margin: 0 auto 6px;
+        }
+        .d-ring-stat-val {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1;
+            letter-spacing: -0.02em;
+        }
+        .d-ring-stat-unit {
+            font-size: 12px;
+            font-weight: 400;
+            color: var(--text3);
+        }
+        .d-ring-stat-label {
+            font-size: 9px;
+            font-weight: 500;
+            color: var(--text3);
+            margin-top: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        /* ── Bottom Stats + Details ── */
+        .d-bottom {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 24px;
+            width: 100%;
+            flex: 1;
+        }
+        .d-bot-section {}
+        .d-bot-label {
+            font-size: 9px;
+            font-weight: 600;
+            color: var(--text3);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--border);
+        }
+        .d-bot-item {
+            padding: 5px 0;
+        }
+        .d-bot-item-primary {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text);
+            line-height: 1.3;
+        }
+        .d-bot-item-secondary {
+            font-size: 9.5px;
+            font-weight: 400;
+            color: var(--text3);
+            margin-top: 1px;
+        }
+
+        /* Stat pills */
+        .d-stat-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .d-stat-pill {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: var(--bg2);
+            border-radius: 12px;
+            padding: 8px 14px;
+            min-width: 70px;
+        }
+        .d-stat-pill-val {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1;
+        }
+        .d-stat-pill-lbl {
+            font-size: 8px;
+            font-weight: 500;
+            color: var(--text3);
+            margin-top: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        /* Skills tags */
+        .d-skill-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .d-skill-tag {
+            font-size: 9px;
+            font-weight: 500;
+            color: var(--text2);
+            background: var(--bg2);
+            padding: 4px 10px;
+            border-radius: 8px;
+        }
+
+        /* ═══════════════════════════════════════
+           MOBILE RESUME
+           ═══════════════════════════════════════ */
+        .m-cv {
+            width: 100%;
+            height: 100%;
+            background: var(--bg);
+            padding: 44px 16px 16px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            scrollbar-width: none;
+        }
+        .m-cv::-webkit-scrollbar { display: none; }
+
+        /* Mobile card */
+        .m-card-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+        .m-card {
+            width: 240px;
+            height: 152px;
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, #e8e8e8 0%, #f5f5f5 25%, #d4d4d4 50%, #e0e0e0 75%, #f0f0f0 100%);
+            box-shadow:
+                0 2px 6px rgba(0,0,0,0.07),
+                0 6px 18px rgba(0,0,0,0.05),
+                inset 0 1px 0 rgba(255,255,255,0.7);
+            margin-bottom: 14px;
+        }
+        .m-card::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(125deg, transparent 30%, rgba(255,255,255,0.25) 45%, transparent 55%);
+            pointer-events: none;
+        }
+        .m-card-chip {
+            position: absolute;
+            top: 22px; left: 20px;
+            width: 28px; height: 22px;
+            border-radius: 4px;
+            background: linear-gradient(140deg, #d4a84b 0%, #e8c87a 40%, #c49a3c 100%);
+            box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08);
+        }
+        .m-card-chip::after {
+            content: '';
+            position: absolute;
+            top: 5px; left: 6px;
+            width: 16px; height: 12px;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 1.5px;
+        }
+        .m-card-name {
+            position: absolute;
+            bottom: 36px; left: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text2);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .m-card-title {
+            position: absolute;
+            bottom: 20px; left: 20px;
+            font-size: 8px;
+            font-weight: 400;
+            color: var(--text3);
+        }
+        .m-card-logo {
+            position: absolute;
+            top: 22px; right: 18px;
+            font-size: 9px;
+            font-weight: 700;
+            color: var(--text3);
+        }
+
+        .m-info-name {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+            text-align: center;
+            letter-spacing: -0.01em;
+        }
+        .m-info-role {
+            font-size: 11px;
+            font-weight: 400;
+            color: var(--text2);
+            text-align: center;
+            margin-top: 2px;
+        }
+        .m-info-loc {
+            font-size: 9px;
+            font-weight: 300;
+            color: var(--text3);
+            text-align: center;
+            margin-top: 2px;
+        }
+
+        /* Mobile rings */
+        .m-rings-section {
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 0;
+            margin: 14px 0;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .m-rings-svg {
+            width: 90px; height: 90px;
+            flex-shrink: 0;
+        }
+        .m-ring-track { fill: none; stroke-width: 9; }
+        .m-ring-fill {
+            fill: none; stroke-width: 9;
+            stroke-linecap: round;
+            transform-origin: center;
+            transform: rotate(-90deg);
+        }
+        .m-rings-data {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .m-ring-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .m-ring-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .m-ring-val {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1;
+            min-width: 36px;
+        }
+        .m-ring-unit {
+            font-size: 9px;
+            font-weight: 400;
+            color: var(--text3);
+        }
+        .m-ring-lbl {
+            font-size: 8px;
+            font-weight: 500;
+            color: var(--text3);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Mobile stat row */
+        .m-stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+        .m-stat-pill {
+            background: var(--bg2);
+            border-radius: 10px;
+            padding: 8px 6px;
+            text-align: center;
+        }
+        .m-stat-pill-val {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1;
+        }
+        .m-stat-pill-lbl {
+            font-size: 7px;
+            font-weight: 500;
+            color: var(--text3);
+            margin-top: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        /* Mobile sections */
+        .m-sect {
+            border-top: 1px solid var(--border);
+            padding: 10px 0;
+        }
+        .m-sect-label {
+            font-size: 8px;
+            font-weight: 600;
+            color: var(--text3);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 8px;
+        }
+        .m-sect-item {
+            padding: 4px 0;
+        }
+        .m-sect-item-primary {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text);
+            line-height: 1.3;
+        }
+        .m-sect-item-secondary {
+            font-size: 8.5px;
+            font-weight: 400;
+            color: var(--text3);
+            margin-top: 1px;
+        }
+        .m-skill-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .m-skill-tag {
+            font-size: 8px;
+            font-weight: 500;
+            color: var(--text2);
+            background: var(--bg2);
+            padding: 3px 8px;
+            border-radius: 6px;
+        }
+        .m-contact-row {
+            font-size: 8px;
+            font-weight: 400;
+            color: var(--text3);
+            line-height: 1.6;
+            border-top: 1px solid var(--border);
+            padding-top: 8px;
+            margin-top: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="concept-header">
+        <div class="concept-meta">
+            <span class="concept-num">Concept 07 / 20</span>
+            <span class="concept-tag">Medium</span>
+        </div>
+        <h1 class="concept-title">Apple Credit Card</h1>
+        <p class="concept-desc">A near-white canvas anchored by a metallic credit-card visual — chip, embossed name, subtle shine. Three Apple Watch–style SVG progress rings quantify career focus areas in red, green, and purple arcs. Stat pills and clean section dividers channel Apple's product-page restraint.</p>
+    </header>
+
+    <div class="devices-scroll">
+        <div class="devices">
+
+            <!-- ────── DESKTOP ────── -->
+            <div class="device-col">
+                <div class="desktop-frame">
+                    <div class="d-cv apple-cv">
+
+                        <!-- CARD + INFO -->
+                        <div class="d-card-area">
+                            <div class="d-card">
+                                <div class="d-card-chip"></div>
+                                <div class="d-card-logo">PHOTO▸GRAPH</div>
+                                <div class="d-card-name">Sanna Lindqvist</div>
+                                <div class="d-card-title">Data Science Lead</div>
+                                <div class="d-card-number">•••• •••• •••• 3107</div>
+                            </div>
+                            <div class="d-card-info">
+                                <div class="d-card-info-name">Sanna Lindqvist</div>
+                                <div class="d-card-info-role">Data Science Lead</div>
+                                <div class="d-card-info-loc">Stockholm, Sweden · 9 years experience</div>
+                                <div class="d-card-info-contact">
+                                    sanna@lindqvist.se · linkedin.com/in/sannalindqvist<br>
+                                    github.com/slindqvist
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- RINGS + STATS -->
+                        <div class="d-rings-area">
+                            <svg class="d-rings-svg" viewBox="0 0 140 140">
+                                <!-- outer red — ML/AI -->
+                                <circle class="ring-track ring-track-r" cx="70" cy="70" r="60"/>
+                                <circle class="ring-fill ring-fill-r" cx="70" cy="70" r="60"
+                                    stroke-dasharray="377" stroke-dashoffset="94"/>
+                                <!-- mid green — Revenue -->
+                                <circle class="ring-track ring-track-g" cx="70" cy="70" r="46"/>
+                                <circle class="ring-fill ring-fill-g" cx="70" cy="70" r="46"
+                                    stroke-dasharray="289" stroke-dashoffset="87"/>
+                                <!-- inner blue — Publications -->
+                                <circle class="ring-track ring-track-b" cx="70" cy="70" r="32"/>
+                                <circle class="ring-fill ring-fill-b" cx="70" cy="70" r="32"
+                                    stroke-dasharray="201" stroke-dashoffset="34"/>
+                            </svg>
+
+                            <div class="d-rings-data">
+                                <div class="d-ring-stat">
+                                    <div class="d-ring-stat-dot" style="background:var(--ring-r);"></div>
+                                    <div class="d-ring-stat-val">75<span class="d-ring-stat-unit">%</span></div>
+                                    <div class="d-ring-stat-label">ML / AI Focus</div>
+                                </div>
+                                <div class="d-ring-stat">
+                                    <div class="d-ring-stat-dot" style="background:var(--ring-g);"></div>
+                                    <div class="d-ring-stat-val">$12<span class="d-ring-stat-unit">M</span></div>
+                                    <div class="d-ring-stat-label">Revenue Impact</div>
+                                </div>
+                                <div class="d-ring-stat">
+                                    <div class="d-ring-stat-dot" style="background:var(--ring-b);"></div>
+                                    <div class="d-ring-stat-val">18</div>
+                                    <div class="d-ring-stat-label">Publications</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- BOTTOM GRID -->
+                        <div class="d-bottom">
+
+                            <!-- Experience -->
+                            <div class="d-bot-section">
+                                <div class="d-bot-label">Experience</div>
+                                <div class="d-bot-item">
+                                    <div class="d-bot-item-primary">Spotify — Data Science Lead</div>
+                                    <div class="d-bot-item-secondary">2022 – Present · Stockholm</div>
+                                </div>
+                                <div class="d-bot-item">
+                                    <div class="d-bot-item-primary">Klarna — Senior ML Engineer</div>
+                                    <div class="d-bot-item-secondary">2019 – 2022 · Stockholm</div>
+                                </div>
+                                <div class="d-bot-item">
+                                    <div class="d-bot-item-primary">Ericsson — Data Scientist</div>
+                                    <div class="d-bot-item-secondary">2016 – 2019 · Stockholm</div>
+                                </div>
+                            </div>
+
+                            <!-- Education + Certs -->
+                            <div class="d-bot-section">
+                                <div class="d-bot-label">Education &amp; Patents</div>
+                                <div class="d-bot-item">
+                                    <div class="d-bot-item-primary">MSc Machine Learning</div>
+                                    <div class="d-bot-item-secondary">KTH Royal Institute · 2016</div>
+                                </div>
+                                <div class="d-bot-item">
+                                    <div class="d-bot-item-primary">BSc Mathematics</div>
+                                    <div class="d-bot-item-secondary">Uppsala University · 2014</div>
+                                </div>
+                                <div class="d-bot-item" style="margin-top:6px;">
+                                    <div class="d-bot-item-primary">3 Patents Granted</div>
+                                    <div class="d-bot-item-secondary">ML prediction systems · NLP</div>
+                                </div>
+                            </div>
+
+                            <!-- Stats + Skills -->
+                            <div class="d-bot-section">
+                                <div class="d-bot-label">At a Glance</div>
+                                <div class="d-stat-pills">
+                                    <div class="d-stat-pill">
+                                        <div class="d-stat-pill-val">15</div>
+                                        <div class="d-stat-pill-lbl">Reports</div>
+                                    </div>
+                                    <div class="d-stat-pill">
+                                        <div class="d-stat-pill-val">3</div>
+                                        <div class="d-stat-pill-lbl">Patents</div>
+                                    </div>
+                                    <div class="d-stat-pill">
+                                        <div class="d-stat-pill-val">9</div>
+                                        <div class="d-stat-pill-lbl">Years</div>
+                                    </div>
+                                </div>
+                                <div style="margin-top:12px;">
+                                    <div class="d-skill-tags">
+                                        <span class="d-skill-tag">Python</span>
+                                        <span class="d-skill-tag">PyTorch</span>
+                                        <span class="d-skill-tag">TensorFlow</span>
+                                        <span class="d-skill-tag">NLP</span>
+                                        <span class="d-skill-tag">MLOps</span>
+                                        <span class="d-skill-tag">SQL</span>
+                                        <span class="d-skill-tag">Spark</span>
+                                        <span class="d-skill-tag">A/B Testing</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+                <span class="device-label">Desktop — 840 × 594</span>
+            </div>
+
+            <!-- ────── MOBILE ────── -->
+            <div class="device-col">
+                <div class="mobile-frame">
+                    <div class="m-cv apple-cv">
+
+                        <!-- Card -->
+                        <div class="m-card-wrap">
+                            <div class="m-card">
+                                <div class="m-card-chip"></div>
+                                <div class="m-card-logo">PG</div>
+                                <div class="m-card-name">Sanna Lindqvist</div>
+                                <div class="m-card-title">Data Science Lead · Stockholm</div>
+                            </div>
+                            <div class="m-info-name">Sanna Lindqvist</div>
+                            <div class="m-info-role">Data Science Lead</div>
+                            <div class="m-info-loc">Stockholm, Sweden · 9 yrs</div>
+                        </div>
+
+                        <!-- Rings -->
+                        <div class="m-rings-section">
+                            <svg class="m-rings-svg" viewBox="0 0 100 100">
+                                <circle class="m-ring-track ring-track-r" cx="50" cy="50" r="42"/>
+                                <circle class="m-ring-fill ring-fill-r" cx="50" cy="50" r="42"
+                                    stroke-dasharray="264" stroke-dashoffset="66"/>
+                                <circle class="m-ring-track ring-track-g" cx="50" cy="50" r="31"/>
+                                <circle class="m-ring-fill ring-fill-g" cx="50" cy="50" r="31"
+                                    stroke-dasharray="195" stroke-dashoffset="58"/>
+                                <circle class="m-ring-track ring-track-b" cx="50" cy="50" r="20"/>
+                                <circle class="m-ring-fill ring-fill-b" cx="50" cy="50" r="20"
+                                    stroke-dasharray="126" stroke-dashoffset="21"/>
+                            </svg>
+                            <div class="m-rings-data">
+                                <div class="m-ring-row">
+                                    <div class="m-ring-dot" style="background:var(--ring-r);"></div>
+                                    <div class="m-ring-val">75%</div>
+                                    <div class="m-ring-lbl">ML / AI Focus</div>
+                                </div>
+                                <div class="m-ring-row">
+                                    <div class="m-ring-dot" style="background:var(--ring-g);"></div>
+                                    <div class="m-ring-val">$12M</div>
+                                    <div class="m-ring-lbl">Revenue</div>
+                                </div>
+                                <div class="m-ring-row">
+                                    <div class="m-ring-dot" style="background:var(--ring-b);"></div>
+                                    <div class="m-ring-val">18</div>
+                                    <div class="m-ring-lbl">Publications</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stats -->
+                        <div class="m-stats-grid">
+                            <div class="m-stat-pill">
+                                <div class="m-stat-pill-val">15</div>
+                                <div class="m-stat-pill-lbl">Reports</div>
+                            </div>
+                            <div class="m-stat-pill">
+                                <div class="m-stat-pill-val">3</div>
+                                <div class="m-stat-pill-lbl">Patents</div>
+                            </div>
+                            <div class="m-stat-pill">
+                                <div class="m-stat-pill-val">9</div>
+                                <div class="m-stat-pill-lbl">Years</div>
+                            </div>
+                        </div>
+
+                        <!-- Experience -->
+                        <div class="m-sect">
+                            <div class="m-sect-label">Experience</div>
+                            <div class="m-sect-item">
+                                <div class="m-sect-item-primary">Spotify — Data Science Lead</div>
+                                <div class="m-sect-item-secondary">2022 – Present</div>
+                            </div>
+                            <div class="m-sect-item">
+                                <div class="m-sect-item-primary">Klarna — Senior ML Engineer</div>
+                                <div class="m-sect-item-secondary">2019 – 2022</div>
+                            </div>
+                            <div class="m-sect-item">
+                                <div class="m-sect-item-primary">Ericsson — Data Scientist</div>
+                                <div class="m-sect-item-secondary">2016 – 2019</div>
+                            </div>
+                        </div>
+
+                        <!-- Education -->
+                        <div class="m-sect">
+                            <div class="m-sect-label">Education</div>
+                            <div class="m-sect-item">
+                                <div class="m-sect-item-primary">MSc Machine Learning — KTH</div>
+                                <div class="m-sect-item-secondary">2016</div>
+                            </div>
+                            <div class="m-sect-item">
+                                <div class="m-sect-item-primary">BSc Mathematics — Uppsala</div>
+                                <div class="m-sect-item-secondary">2014</div>
+                            </div>
+                        </div>
+
+                        <!-- Skills -->
+                        <div class="m-sect">
+                            <div class="m-sect-label">Skills</div>
+                            <div class="m-skill-tags">
+                                <span class="m-skill-tag">Python</span>
+                                <span class="m-skill-tag">PyTorch</span>
+                                <span class="m-skill-tag">TensorFlow</span>
+                                <span class="m-skill-tag">NLP</span>
+                                <span class="m-skill-tag">MLOps</span>
+                                <span class="m-skill-tag">SQL</span>
+                                <span class="m-skill-tag">Spark</span>
+                                <span class="m-skill-tag">A/B Testing</span>
+                            </div>
+                        </div>
+
+                        <div class="m-contact-row">
+                            sanna@lindqvist.se · github.com/slindqvist
+                        </div>
+
+                    </div>
+                </div>
+                <span class="device-label">Mobile — 320 × 620</span>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>
+```
